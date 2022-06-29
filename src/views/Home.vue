@@ -60,19 +60,21 @@
             <el-card name="2">
               <div slot="header" class="card_header">
                 <span>生成配置</span>
-                <el-button size="small" type="primary" @click="output" v-if="formInline.blueprintData">输出</el-button>
+                <el-button size="small" type="primary" @click="output" v-if="formInline.blueprintData || formInline.paramType == '4'">输出</el-button>
               </div>
               <div class="card_content">
                 <el-form label-width="120px" :model="formInline" ref="paramForm" @submit.native.prevent :rules="rules">
                   <el-form-item label="转换类型：">
                     <el-radio-group v-model="formInline.paramType">
                       <el-radio label="0">垂直叠加</el-radio>
-                      <el-radio label="1">垂直偏移</el-radio>
-                      <el-radio label="2">水平偏移</el-radio>
+                      <el-radio label="1">坐标偏移</el-radio>
+                      <el-radio label="2">水平翻转</el-radio>
                       <el-radio label="3">线性变换</el-radio>
+                      <el-radio label="4">无中生有(无需导入)</el-radio>
                     </el-radio-group>
                   </el-form-item>
                   <template v-if="formInline.paramType=='0'">
+                    <!-- 垂直叠加 -->
                     <div class="flex">
                       <el-form-item label="生成层数：" prop="params.floors">
                         <el-input type="numberx" v-model="formInline.params.floors">
@@ -89,6 +91,7 @@
                               <p>大型储物仓：3</p>
                               <p>储液罐：3</p>
                               <p>矩阵研究站：3</p>
+                              <p>制造台：4</p>
                             </template>
                             <span>垂直间隔：<i class="el-icon-question "></i></span>
                           </el-tooltip>
@@ -99,58 +102,94 @@
                     </div>
                   </template>
                   <template v-if="formInline.paramType=='1'">
+                    <!-- 坐标偏移 -->
                     <div class="flex">
-                      <el-form-item label="垂直偏移量：" prop="params.offsetZ">
-                        <template slot="label">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>基于0相对偏移</p>
-                              <p>垂直偏移产生的悬空地面建筑不可再复制</p>
-                            </template>
-                            <span>垂直偏移量：<i class="el-icon-question "></i></span>
-                          </el-tooltip>
-                        </template>
-                        <el-input type="number" v-model="formInline.params.offsetZ">
-                        </el-input>
+                      <el-form-item label="偏移方向：" prop="params.offsetType" key="offsetType">
+                        <el-radio-group v-model="formInline.params.offsetType">
+                          <el-radio label="vertical">
+                            <el-tooltip class="item" effect="dark" placement="top">
+                              <template slot="content">
+                                <p>*悬空建筑重新框选复制后会提示“无地基支撑”，将无地基支撑蓝图重新导入，垂直偏移0单位导出可修正</p>
+                              </template>
+                              <span>垂直偏移<i class="el-icon-question "></i></span>
+                            </el-tooltip>
+                          </el-radio>
+                          <el-radio label="horizontal">水平偏移</el-radio>
+                        </el-radio-group>
                       </el-form-item>
+                    </div>
+                    <div class="flex">
+                      <template v-if="formInline.params.offsetType=='vertical'">
+                        <el-form-item label="垂直偏移量：" prop="params.offsetZ" key="offsetZ">
+                          <template slot="label">
+                            <el-tooltip class="item" effect="dark" placement="top">
+                              <template slot="content">
+                                <p>基于0相对偏移</p>
+                              </template>
+                              <span>垂直偏移量：<i class="el-icon-question "></i></span>
+                            </el-tooltip>
+                          </template>
+                          <el-input type="number" v-model="formInline.params.offsetZ">
+                          </el-input>
+                        </el-form-item>
+                      </template>
+                      <template v-if="formInline.params.offsetType=='horizontal'">
+                        <el-form-item label="横向偏移量：" prop="params.offsetX" key="offsetX">
+                          <template slot="label">
+                            <el-tooltip class="item" effect="dark" placement="top">
+                              <template slot="content">
+                                <p>基于0相对偏移</p>
+                              </template>
+                              <span>横向偏移量：<i class="el-icon-question "></i></span>
+                            </el-tooltip>
+                          </template>
+                          <el-input type="number" v-model="formInline.params.offsetX">
+                          </el-input>
+                        </el-form-item>
+                        <el-form-item label="纵向偏移量：" prop="params.offsetY" key="offsetY">
+                          <template slot="label">
+                            <el-tooltip class="item" effect="dark" placement="top">
+                              <template slot="content">
+                                <p>基于0相对偏移</p>
+                              </template>
+                              <span>纵向偏移量：<i class="el-icon-question "></i></span>
+                            </el-tooltip>
+                          </template>
+                          <el-input type="number" v-model="formInline.params.offsetY">
+                          </el-input>
+                        </el-form-item>
+                      </template>
                     </div>
                   </template>
                   <template v-if="formInline.paramType=='2'">
+                    <!-- 水平翻转 -->
                     <div class="flex">
-                      <el-form-item label="横向偏移量：" prop="params.offsetX">
+                      <el-form-item label="翻转方向：" prop="params.overturnType" key="overturnType">
                         <template slot="label">
                           <el-tooltip class="item" effect="dark" placement="top">
                             <template slot="content">
-                              <p>基于0相对偏移</p>
+                              <p>火力发电厂、微型聚变发电站的分拣器接口不对称，翻转后不对称的那个接口会无法连接</p>
                             </template>
-                            <span>横向偏移量：<i class="el-icon-question "></i></span>
+                            <span>翻转方向：<i class="el-icon-question "></i></span>
                           </el-tooltip>
                         </template>
-                        <el-input type="number" v-model="formInline.params.offsetX">
-                        </el-input>
-                      </el-form-item>
-                      <el-form-item label="纵向偏移量：" prop="params.offsetY">
-                        <template slot="label">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>基于0相对偏移</p>
-                            </template>
-                            <span>纵向偏移量：<i class="el-icon-question "></i></span>
-                          </el-tooltip>
-                        </template>
-                        <el-input type="number" v-model="formInline.params.offsetY">
-                        </el-input>
+                        <el-radio-group v-model="formInline.params.overturnType">
+                          <el-radio label="x">横向翻转</el-radio>
+                          <el-radio label="y">纵向翻转</el-radio>
+                        </el-radio-group>
                       </el-form-item>
                     </div>
                   </template>
                   <template v-if="formInline.paramType=='3'">
+                    <!-- 线性变换 -->
                     <div class="flex">
-                      <el-form-item label="横向放缩量：" prop="params.zoomX">
+                      <el-form-item label="横向放缩量：" prop="params.zoomX" key="zoomX">
                         <template slot="label">
                           <el-tooltip class="item" effect="dark" placement="top">
                             <template slot="content">
                               <p>基于1缩放</p>
-                              <p>输入负数可翻转，翻转后部分连接可能存在问题，如分拣器</p>
+                              <p>输入负数可横向翻转</p>
+                              <p>*高纬度过密建筑提示建筑碰撞的蓝图，可用1.1放大蓝图间隙解决</p>
                             </template>
                             <span>横向放缩量：<i class="el-icon-question "></i></span>
                           </el-tooltip>
@@ -158,12 +197,13 @@
                         <el-input type="number" v-model="formInline.params.zoomX">
                         </el-input>
                       </el-form-item>
-                      <el-form-item label="纵向放缩量：" prop="params.zoomY">
+                      <el-form-item label="纵向放缩量：" prop="params.zoomY" key="zoomY">
                         <template slot="label">
                           <el-tooltip class="item" effect="dark" placement="top">
                             <template slot="content">
                               <p>基于1缩放</p>
-                              <p>输入负数可翻转，翻转后部分连接可能存在问题，如分拣器</p>
+                              <p>输入负数可纵向翻转</p>
+                              <p>*高纬度过密建筑提示建筑碰撞的蓝图，可用1.1放大蓝图间隙解决</p>
                             </template>
                             <span>纵向放缩量：<i class="el-icon-question "></i></span>
                           </el-tooltip>
@@ -171,7 +211,7 @@
                         <el-input type="number" v-model="formInline.params.zoomY">
                         </el-input>
                       </el-form-item>
-                      <el-form-item label="旋转角度：" prop="params.rotate">
+                      <el-form-item label="旋转角度：" prop="params.rotate" key="rotate">
                         <template slot="label">
                           <el-tooltip class="item" effect="dark" placement="top">
                             <template slot="content">
@@ -184,6 +224,86 @@
                         </el-input>
                       </el-form-item>
                     </div>
+                  </template>
+                  <template v-if="formInline.paramType=='4'">
+                    <!-- 无中生有 -->
+                    <div class="flex">
+                      <el-form-item label="生成内容：" prop="params.createType">
+                        <el-radio-group v-model="formInline.params.createType">
+                          <el-radio label="0">
+                            <el-tooltip class="item" effect="dark" placement="top">
+                              <template slot="content">
+                                <p>调换起终点高度可更改传送带方向</p>
+                              </template>
+                              <span>无褶皱垂直传送带<i class="el-icon-question "></i></span>
+                            </el-tooltip>
+                          </el-radio>
+                          <el-radio label="1">
+                            <el-tooltip class="item" effect="dark" placement="top">
+                              <template slot="content">
+                                <p>可实现超远距离无带传输的分拣器</p>
+                                <p>生成的传送带两端将会有随机编码对应，可直接用传送带连接端点使用</p>
+                              </template>
+                              <span>虫洞分拣器<i class="el-icon-question "></i></span>
+                            </el-tooltip>
+                          </el-radio>
+                        </el-radio-group>
+                      </el-form-item>
+                    </div>
+                    <template v-if="formInline.params.createType=='0'">
+                      <div class="flex">
+                        <!-- 无褶皱垂直传送带 -->
+                        <el-form-item label="起点高度：" prop="params.startZ" key="startZ">
+                          <el-input type="number" v-model="formInline.params.startZ">
+                          </el-input>
+                        </el-form-item>
+                        <el-form-item label="终点高度：" prop="params.endZ" key="endZ">
+                          <el-input type="number" v-model="formInline.params.endZ">
+                          </el-input>
+                        </el-form-item>
+                      </div>
+                    </template>
+                    <template v-if="formInline.params.createType=='1'">
+                      <!-- 虫洞分拣器 -->
+                      <div class="flex">
+                        <el-form-item label="起点相对坐标X：" prop="params.startPoint.X" key="startPoint.X">
+                          <el-input type="number" v-model="formInline.params.startPoint.X">
+                          </el-input>
+                        </el-form-item>
+                        <el-form-item label="起点相对坐标Y：" prop="params.startPoint.Y" key="startPoint.Y">
+                          <el-input type="number" v-model="formInline.params.startPoint.Y">
+                          </el-input>
+                        </el-form-item>
+                        <el-form-item label="起点相对坐标Z：" prop="params.startPoint.Z" key="startPoint.Z">
+                          <el-input type="number" v-model="formInline.params.startPoint.Z">
+                          </el-input>
+                        </el-form-item>
+                      </div>
+                      <div class="flex">
+                        <el-form-item label="终点相对坐标X：" prop="params.endPoint.X" key="endPoint.X">
+                          <el-input type="number" v-model="formInline.params.endPoint.X">
+                          </el-input>
+                        </el-form-item>
+                        <el-form-item label="终点相对坐标Y：" prop="params.endPoint.Y" key="endPoint.Y">
+                          <el-input type="number" v-model="formInline.params.endPoint.Y">
+                          </el-input>
+                        </el-form-item>
+                        <el-form-item label="终点相对坐标Z：" prop="params.endPoint.Z" key="endPoint.Z">
+                          <el-input type="number" v-model="formInline.params.endPoint.Z">
+                          </el-input>
+                        </el-form-item>
+                      </div>
+                      <div class="flex">
+                        <el-form-item label="分拣器方向：" prop="params.WinserterDir" key="WinserterDir">
+                          <el-select v-model="formInline.params.WinserterDir">
+                            <el-option value="left" label="向左"></el-option>
+                            <el-option value="right" label="向右"></el-option>
+                            <el-option value="top" label="向上"></el-option>
+                            <el-option value="bottom" label="向下"></el-option>
+                          </el-select>
+                        </el-form-item>
+                      </div>
+                    </template>
                   </template>
                 </el-form>
               </div>
@@ -271,12 +391,28 @@ export default {
         params: {
           floors: 2,
           spacing: 2,
+          offsetType: "vertical",
           offsetX: 0.5,
           offsetY: 0.5,
           offsetZ: 0.5,
-          zoomX: 2,
-          zoomY: 2,
-          rotate: 45,
+          overturnType: "x",
+          zoomX: 1.1,
+          zoomY: 1.1,
+          rotate: 0,
+          createType: "0",
+          startZ: 0,
+          endZ: 10,
+          startPoint:{
+            X: 0,
+            Y: 0,
+            Z: 0
+          },
+          endPoint:{
+            X: -6,
+            Y: 4,
+            Z: 0
+          },
+          WinserterDir: "left",
         },
         resBlueprintData: null,
         resType: "blueprint",
@@ -381,6 +517,105 @@ export default {
             trigger: "blur",
           },
         ],
+        "params.startZ": [
+          {
+            validator: (rule, value, callback) => {
+              if (!value && value !== 0) {
+                return callback(new Error("请输入起点高度"));
+              }
+              callback();
+            },
+            trigger: "blur",
+          },
+        ],
+        "params.endZ": [
+          {
+            validator: (rule, value, callback) => {
+              if (!value && value !== 0) {
+                return callback(new Error("请输入终点高度"));
+              }
+              callback();
+            },
+            trigger: "blur",
+          },
+        ],
+        "params.startPoint.X": [
+          {
+            validator: (rule, value, callback) => {
+              if (!value && value !== 0) {
+                return callback(new Error("请输入起点相对坐标X"));
+              }
+              callback();
+            },
+            trigger: "blur",
+          },
+        ],
+        "params.startPoint.Y": [
+          {
+            validator: (rule, value, callback) => {
+              if (!value && value !== 0) {
+                return callback(new Error("请输入起点相对坐标Y"));
+              }
+              callback();
+            },
+            trigger: "blur",
+          },
+        ],
+        "params.startPoint.Z": [
+          {
+            validator: (rule, value, callback) => {
+              if (!value && value !== 0) {
+                return callback(new Error("请输入起点相对坐标Z"));
+              }
+              callback();
+            },
+            trigger: "blur",
+          },
+        ],
+        "params.endPoint.X": [
+          {
+            validator: (rule, value, callback) => {
+              if (!value && value !== 0) {
+                return callback(new Error("请输入终点相对坐标X"));
+              }
+              callback();
+            },
+            trigger: "blur",
+          },
+        ],
+        "params.endPoint.Y": [
+          {
+            validator: (rule, value, callback) => {
+              if (!value && value !== 0) {
+                return callback(new Error("请输入终点相对坐标Y"));
+              }
+              callback();
+            },
+            trigger: "blur",
+          },
+        ],
+        "params.endPoint.Z": [
+          {
+            validator: (rule, value, callback) => {
+              if (!value && value !== 0) {
+                return callback(new Error("请输入终点相对坐标Z"));
+              }
+              callback();
+            },
+            trigger: "blur",
+          },
+        ],
+        "params.WinserterDir": [
+          {
+            validator: (rule, value, callback) => {
+              if (!value) {
+                return callback(new Error("请输入选择分拣器方向"));
+              }
+              callback();
+            },
+            trigger: "blur",
+          },
+        ],
       },
       fullscreenLoading: false,
       showLoadingBar: false,
@@ -432,6 +667,209 @@ export default {
     deepCopy(obj) {
       return JSON.parse(JSON.stringify(obj));
     },
+    newBlueprint(name) {
+      return {
+        header: {
+          layout: 10,
+          icons: [0, 0, 0, 0, 0],
+          time: new Date(),
+          gameVersion: "0.9.26.13026",
+          shortDesc: name,
+          desc: "",
+        },
+        version: 1,
+        cursorOffset: {
+          x: 0,
+          y: 0,
+        },
+        cursorTargetArea: 0,
+        dragBoxSize: {
+          x: 1,
+          y: 1,
+        },
+        primaryAreaIdx: 0,
+        areas: [
+          {
+            index: 0,
+            parentIndex: -1,
+            tropicAnchor: 0,
+            areaSegments: 200,
+            anchorLocalOffset: {
+              x: 0,
+              y: 0,
+            },
+            size: {
+              x: 1,
+              y: 1,
+            },
+          },
+        ],
+        buildings: [],
+      };
+    },
+    createBelt({
+      index = 0,
+      itemId = 2003,
+      x = 0,
+      y = 0,
+      z = 0,
+      yaw = 180,
+      outputObjIdx = -1,
+      parameters = null,
+    }) {
+      return {
+        index: index,
+        areaIndex: 0,
+        localOffset: [
+          { x: x, y: y, z: z },
+          { x: x, y: y, z: z },
+        ],
+        yaw: [yaw, yaw],
+        itemId: itemId,
+        modelIndex: 37,
+        outputObjIdx: outputObjIdx,
+        inputObjIdx: -1,
+        outputToSlot: outputObjIdx == -1 ? 0 : 1,
+        inputFromSlot: 0,
+        outputFromSlot: 0,
+        inputToSlot: 1,
+        outputOffset: 0,
+        inputOffset: 0,
+        recipeId: 0,
+        filterId: 0,
+        parameters: parameters,
+      };
+    },
+    createVbelt(startZ, endZ) {
+      // 生成垂直传送带
+      startZ = +startZ;
+      endZ = +endZ;
+      let res = this.newBlueprint("无褶皱垂直传送带-" + startZ + "-" + endZ);
+      let isUp = startZ <= endZ;
+      const skewX = 0.0002;
+      let curX = 0;
+      res.buildings.push(
+        this.createBelt({
+          index: 0,
+          itemId: 2003,
+          z: endZ,
+          x: (curX += skewX),
+        })
+      );
+      let prevZ = endZ;
+      let end = Math[isUp ? "floor" : "ceil"](endZ * 2) / 2;
+      let start = Math[isUp ? "ceil" : "floor"](startZ * 2) / 2;
+      for (let z = end; isUp ? z > start : z < start; isUp ? (z -= 0.5) : (z += 0.5)) {
+        if (z != prevZ) {
+          prevZ = z;
+          let len = res.buildings.length;
+          res.buildings.push(
+            this.createBelt({
+              index: len,
+              itemId: 2003,
+              z: prevZ,
+              outputObjIdx: len - 1,
+              x: (curX += skewX),
+            })
+          );
+        }
+      }
+      let len = res.buildings.length;
+      res.buildings.push(
+        this.createBelt({
+          index: len,
+          itemId: 2003,
+          z: startZ,
+          outputObjIdx: len - 1,
+          x: (curX += skewX),
+        })
+      );
+      return res;
+    },
+    createWinserter(startPoint, endPoint, WinserterDir) {
+      // 虫洞分拣器
+      const startPointX = +startPoint.X;
+      const startPointY = +startPoint.Y;
+      const startPointZ = +startPoint.Z;
+      const endPointX = +endPoint.X;
+      const endPointY = +endPoint.Y;
+      const endPointZ = +endPoint.Z;
+      let count = ~~(Math.random() * 999999);
+      let res = this.newBlueprint(
+        `虫洞分拣器-(${startPointX},${startPointY},${startPointZ})-(${endPointX},${endPointY},${endPointZ})-${count}`
+      );
+      // 目标传送带
+      res.buildings.push(
+        this.createBelt({
+          index: 0,
+          itemId: 2003,
+          x: endPointX,
+          y: endPointY,
+          z: endPointZ,
+          parameters: {
+            iconId: 43501,
+            count: count,
+          },
+        })
+      );
+      // 起始传送带
+      res.buildings.push(
+        this.createBelt({
+          index: 1,
+          itemId: 2003,
+          x: startPointX,
+          y: startPointY,
+          z: startPointZ,
+          parameters: {
+            iconId: 507,
+            count: count,
+          },
+        })
+      );
+      // 分拣器
+      let offsetObj = { x: startPointX-1, y: startPointY, z: startPointZ };
+      let yaw = [270, 270];
+      switch (WinserterDir) {
+        case "left":
+          offsetObj = { x: startPointX-1, y: startPointY, z: startPointZ };
+          yaw = [270, 270];
+          break;
+        case "right":
+          offsetObj = { x: startPointX+1, y: startPointY, z: startPointZ };
+          yaw = [90, 90];
+          break;
+        case "top":
+          offsetObj = { x: startPointX, y: startPointY+1, z: startPointZ };
+          yaw = [0, 0];
+          break;
+        case "bottom":
+          offsetObj = { x: startPointX, y: startPointY-1, z: startPointZ };
+          yaw = [180, 180];
+          break;
+      }
+      res.buildings.push({
+        index: 2,
+        areaIndex: 0,
+        localOffset: [{ x: startPointX, y: startPointY, z: startPointZ }, offsetObj],
+        yaw: yaw,
+        itemId: 2013,
+        modelIndex: 43,
+        outputObjIdx: 0,
+        inputObjIdx: 1,
+        outputToSlot: -1,
+        inputFromSlot: -1,
+        outputFromSlot: 0,
+        inputToSlot: 1,
+        outputOffset: 0,
+        inputOffset: 0,
+        recipeId: 0,
+        filterId: 0,
+        parameters: {
+          length: 1,
+        },
+      });
+      return res;
+    },
     linearTransformation(blueprintData, zoomX, zoomY, rotate) {
       // 线性变换
       let res = this.deepCopy(blueprintData);
@@ -452,6 +890,244 @@ export default {
       res.cursorOffset.x = ~~(W / 2);
       res.cursorOffset.y = ~~(H / 2);
 
+      let overturnX = zoomX < 0; // x翻转
+      let overturnY = zoomY < 0; // y翻转
+      // 传送带接口建筑
+      let beltSlotBuilds = [
+        {
+          itemId: 2020, // 四向分流器
+          modelIndex: 38, // 十字单层
+          indexs: [],
+          axis: "x", // 模型yaw=0时对称方向(对称轴的垂直方向)
+          alterSlot: {
+            x: { 1: 3, 3: 1 },
+            y: { 0: 2, 2: 0 },
+          },
+        },
+        {
+          itemId: 2020, // 四向分流器
+          modelIndex: 39, // 一字双层
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: {},
+            y: { 0: 2, 1: 3, 2: 0, 3: 1 },
+          },
+        },
+        {
+          itemId: 2020, // 四向分流器
+          modelIndex: 40, // 十字双层
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 1: 3, 3: 1 },
+            y: { 0: 2, 2: 0 },
+          },
+        },
+      ];
+      // 分拣器接口建筑
+      let inserterSlotBuilds = [
+        {
+          itemId: 2101, // 小型储物仓
+          indexs: [],
+          axis: "x", // 模型yaw=0时对称方向(对称轴的垂直方向)
+          alterSlot: {
+            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
+          },
+        },
+        {
+          itemId: 2102, // 大型储物仓
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
+          },
+        },
+        {
+          itemId: 2204, // 火力发电厂
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 4, 1: 3, 3: 1, 4: 0 }, // 2不对称
+            y: { 0: 1, 1: 0, 3: 4, 4: 3 }, // 2不对称
+          },
+        },
+        {
+          itemId: 2211, // 微型聚变发电站
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 4, 1: 3, 3: 1, 4: 0 }, // 2不对称
+            y: { 0: 1, 1: 0, 3: 4, 4: 3 }, // 2不对称
+          },
+        },
+        {
+          itemId: 2302, // 电弧熔炉
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
+          },
+        },
+        {
+          itemId: 2315, // 位面熔炉
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
+          },
+        },
+        {
+          itemId: 2303, // 制造台 Mk.I
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
+          },
+        },
+        {
+          itemId: 2304, // 制造台 Mk.II
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
+          },
+        },
+        {
+          itemId: 2305, // 制造台 Mk.III
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
+          },
+        },
+        {
+          itemId: 2308, // 原油精炼厂
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 5, 1: 4, 2: 3, 3: 2, 4: 1, 5: 0, 6: 8, 8: 6 },
+            y: { 0: 5, 1: 4, 2: 3, 3: 2, 4: 1, 5: 0, 6: 8, 8: 6 },
+          },
+        },
+        {
+          itemId: 2309, // 化工厂
+          indexs: [],
+          axis: "y",
+          alterSlot: {
+            x: { 0: 7, 1: 2, 2: 1, 3: 6, 4: 5, 5: 4, 6: 3, 7: 0 },
+            y: { 0: 6, 1: 5, 2: 4, 3: 7, 4: 2, 5: 1, 6: 0, 7: 3 },
+          },
+        },
+        {
+          itemId: 2310, // 微型粒子对撞机
+          indexs: [],
+          axis: "y",
+          alterSlot: {
+            x: {}, // 不对称
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0 },
+          },
+        },
+        {
+          itemId: 2311, // 电磁轨道弹射器
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 1, 1: 0 },
+            y: { 2: 3, 3: 2 },
+          },
+        },
+        {
+          itemId: 2210, // 人造恒星
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 1: 3, 3: 1 },
+            y: { 1: 2, 2: 1 },
+          },
+        },
+        {
+          itemId: 2312, // 垂直发射井
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 1: 2, 2: 1 },
+            y: {}, // 不对称
+          },
+        },
+        {
+          itemId: 2901, // 矩阵研究站
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
+          },
+        },
+      ];
+      if (zoomX * zoomY < 0) {
+        res.buildings.forEach((v) => {
+          beltSlotBuilds.forEach((build) => {
+            if (
+              build.itemId == v.itemId &&
+              (!build.modelIndex || build.modelIndex == v.modelIndex)
+            ) {
+              if (overturnX) {
+                if (build.axis == "y") {
+                  v.yaw[0] -= 180;
+                  v.yaw[1] -= 180;
+                }
+              }
+              if (overturnY) {
+                if (build.axis == "y") {
+                  v.yaw[0] -= 180;
+                  v.yaw[1] -= 180;
+                }
+              }
+              // 四向过滤接口单独处理翻转 1->3 0->2
+              if (v.itemId == 2020 && v.parameters.priority) {
+                const orginPriority = this.deepCopy(v.parameters.priority);
+                v.parameters.priority.forEach((b, i) => {
+                  if (overturnX) {
+                    const targetIndex = build.alterSlot[build.axis][i];
+                    if (targetIndex != null) v.parameters.priority[i] = orginPriority[targetIndex];
+                  }
+                  if (overturnY) {
+                    const targetIndex = build.alterSlot[build.axis][i];
+                    if (targetIndex != null) v.parameters.priority[i] = orginPriority[targetIndex];
+                  }
+                });
+              }
+              build.indexs.push(v.index);
+            }
+          });
+          inserterSlotBuilds.forEach((build) => {
+            if (build.itemId == v.itemId) {
+              if (overturnX) {
+                if (build.axis == "y") {
+                  v.yaw[0] -= 180;
+                  v.yaw[1] -= 180;
+                }
+              }
+              if (overturnY) {
+                if (build.axis == "y") {
+                  v.yaw[0] -= 180;
+                  v.yaw[1] -= 180;
+                }
+              }
+              build.indexs.push(v.index);
+            }
+          });
+        });
+      }
+
       res.buildings.forEach((v) => {
         let x = zoomX * v.localOffset[0].x;
         let x2 = zoomX * v.localOffset[1].x;
@@ -465,8 +1141,97 @@ export default {
           x * Math.sin((rotate * Math.PI) / 180) + y * Math.cos((rotate * Math.PI) / 180);
         v.localOffset[1].y =
           x2 * Math.sin((rotate * Math.PI) / 180) + y2 * Math.cos((rotate * Math.PI) / 180);
+        if (overturnX) {
+          v.yaw[0] = -v.yaw[0];
+          v.yaw[1] = -v.yaw[1];
+        }
+        if (overturnY) {
+          v.yaw[0] = 180 - v.yaw[0];
+          v.yaw[1] = 180 - v.yaw[1];
+        }
+
         v.yaw[0] -= rotate;
         v.yaw[1] -= rotate;
+
+        // 翻转接口
+        if (zoomX * zoomY < 0) {
+          if (v.itemId == 2204 || v.itemId == 2211) {
+            // 火力发电厂、微型聚变发电站翻转偏移
+            v.localOffset[0].x += 1 * Math.cos((v.yaw[0] * Math.PI) / 180);
+            v.localOffset[1].x += 1 * Math.cos((v.yaw[1] * Math.PI) / 180);
+            v.localOffset[0].y -= 1 * Math.sin((v.yaw[0] * Math.PI) / 180);
+            v.localOffset[1].y -= 1 * Math.sin((v.yaw[1] * Math.PI) / 180);
+          }
+          if (v.itemId == 2309) {
+            // 化工厂翻转偏移
+            v.localOffset[0].x -= 1 * Math.sin((v.yaw[0] * Math.PI) / 180);
+            v.localOffset[1].x -= 1 * Math.sin((v.yaw[1] * Math.PI) / 180);
+            v.localOffset[0].y -= 1 * Math.cos((v.yaw[0] * Math.PI) / 180);
+            v.localOffset[1].y -= 1 * Math.cos((v.yaw[1] * Math.PI) / 180);
+          }
+          switch (v.itemId) {
+            case 2001: // 传送带
+            case 2002: // 高速传送带
+            case 2003: // 极速传送带
+              beltSlotBuilds.forEach((build) => {
+                build.indexs.forEach((index) => {
+                  if (v.inputObjIdx == index) {
+                    const orginInputFromSlot = v.inputFromSlot;
+                    if (overturnX) {
+                      const inputSlot = build.alterSlot[build.axis][+orginInputFromSlot];
+                      if (inputSlot != null) v.inputFromSlot = inputSlot;
+                    }
+                    if (overturnY) {
+                      const inputSlot = build.alterSlot[build.axis][+orginInputFromSlot];
+                      if (inputSlot != null) v.inputFromSlot = inputSlot;
+                    }
+                  }
+                  if (v.outputObjIdx == index) {
+                    const orginOutputToSlot = v.outputToSlot;
+                    if (overturnX) {
+                      const outputSlot = build.alterSlot[build.axis][+orginOutputToSlot];
+                      if (outputSlot != null) v.outputToSlot = outputSlot;
+                    }
+                    if (overturnY) {
+                      const outputSlot = build.alterSlot[build.axis][+orginOutputToSlot];
+                      if (outputSlot != null) v.outputToSlot = outputSlot;
+                    }
+                  }
+                });
+              });
+              break;
+            case 2011: // 分拣器
+            case 2012: // 高速分拣器
+            case 2013: // 极速分拣器
+              inserterSlotBuilds.forEach((build) => {
+                build.indexs.forEach((index) => {
+                  if (v.inputObjIdx == index) {
+                    const orginInputFromSlot = v.inputFromSlot;
+                    if (overturnX) {
+                      const inputSlot = build.alterSlot[build.axis][+orginInputFromSlot];
+                      if (inputSlot != null) v.inputFromSlot = inputSlot;
+                    }
+                    if (overturnY) {
+                      const inputSlot = build.alterSlot[build.axis][+orginInputFromSlot];
+                      if (inputSlot != null) v.inputFromSlot = inputSlot;
+                    }
+                  }
+                  if (v.outputObjIdx == index) {
+                    const orginOutputToSlot = v.outputToSlot;
+                    if (overturnX) {
+                      const outputSlot = build.alterSlot[build.axis][+orginOutputToSlot];
+                      if (outputSlot != null) v.outputToSlot = outputSlot;
+                    }
+                    if (overturnY) {
+                      const outputSlot = build.alterSlot[build.axis][+orginOutputToSlot];
+                      if (outputSlot != null) v.outputToSlot = outputSlot;
+                    }
+                  }
+                });
+              });
+              break;
+          }
+        }
       });
       return res;
     },
@@ -481,10 +1246,14 @@ export default {
       });
       return res;
     },
-    verticalOffset(blueprintData, offsetZ) {
+    verticalOffset(blueprintData, offsetZ, moveZ = 0) {
       // 垂直偏移
+      // moveZ 垂直复制时移动的距离
       let res = this.deepCopy(blueprintData);
-      let needBase = false;
+      let needBase = false; // 是否卡地基浮空
+      let changIndex = false; // 是否变更index顺序
+      let inserterList = []; // 分拣器集合
+      let newBuildings = [];
       res.buildings.forEach((v) => {
         v.localOffset[0].z += +offsetZ;
         v.localOffset[1].z += +offsetZ;
@@ -495,33 +1264,59 @@ export default {
           case 2102: // 大型储物仓
           case 2106: // 储液罐
           case 2901: // 矩阵研究站
-            if (v.inputObjIdx == -1) {
+            if ((v.localOffset[0].z > 1 || v.localOffset[1].z > 1) && v.inputObjIdx == -1) {
               v.inputObjIdx = res.buildings.length;
               needBase = true;
             }
+            newBuildings.push(v);
             break;
-          case 2001: // 低速传送带
+          case 2001: // 传送带
           case 2002: // 高速传送带
           case 2003: // 极速传送带
-          case 2011: // 低速分拣器
+          case 2030: // 流速监测器
+            newBuildings.push(v);
+            break;
+          case 2011: // 分拣器
           case 2012: // 高速分拣器
           case 2013: // 极速分拣器
-          case 2030: // 流速器
+            inserterList.push(v);
+            newBuildings.push(v);
             break;
           case 2313: // 喷涂机
             // 不能用地基当底
+            newBuildings.push(v);
+            break;
+          case 1131: // 地基
+            v.localOffset[0].z = -10;
+            v.localOffset[1].z = -10;
+            newBuildings.push(v);
             break;
           default:
-            if (v.inputObjIdx == -1) {
-              v.inputObjIdx = res.buildings.length;
+            var z1 = v.localOffset[0].z;
+            var z2 = v.localOffset[1].z;
+            var inputObjIdx = v.inputObjIdx;
+            if ((z1 > 1 || z2 > 1) && inputObjIdx == -1) {
               needBase = true;
+              v.inputObjIdx = res.buildings.length;
+            }
+            // 悬空建筑如果先建分拣器会导致输入端链接失效，判断建筑为悬空建筑时（或垂直复制后最顶层为悬空时）往前移动
+            if (
+              (z1 + moveZ > 1 || z2 + moveZ > 1) &&
+              inputObjIdx == -1
+              //  && inserterList.some((v2) => v2.outputObjIdx == v.index) // 是否存在outputObjIdx是当前建筑、index比当前建筑小的第一个分拣器
+            ) {
+              // 将符合条件的建筑挪到最前面
+              newBuildings.unshift(v);
+              changIndex = true;
+            } else {
+              newBuildings.push(v);
             }
             break;
         }
       });
-      if(needBase){
-        res.buildings.push({
-          index: res.buildings.length,
+      if (needBase) {
+        newBuildings.push({
+          index: newBuildings.length,
           areaIndex: 0,
           localOffset: [
             { x: 0, y: 0, z: -10 },
@@ -543,16 +1338,33 @@ export default {
           parameters: null,
         });
       }
+      if (changIndex) {
+        this.formatIndex(newBuildings);
+      }
+      res.buildings = newBuildings;
+      console.log(res.buildings);
       return res;
+    },
+    formatIndex(buildings) {
+      // 重排index顺序
+      let indexMap = {};
+      buildings.forEach((v, index) => {
+        indexMap[v.index] = index;
+      });
+      buildings.forEach((v) => {
+        v.index = indexMap[v.index];
+        if (v.outputObjIdx != -1) v.outputObjIdx = indexMap[v.outputObjIdx];
+        if (v.inputObjIdx != -1) v.inputObjIdx = indexMap[v.inputObjIdx];
+      });
     },
     verticalCopy(blueprintData, floors, spacing) {
       // 垂直复制
-      let res = this.verticalOffset(blueprintData, 0); // 深拷贝，并给悬空建筑建地基底
+      let res = this.verticalOffset(blueprintData, 0, (floors - 1) * spacing); // 深拷贝，并给悬空建筑建地基底
       let buildings = res.buildings;
       let prevFloor = buildings;
-      let needBase = false;
       for (let i = 2; i <= floors; i++) {
         let nextFloor = [];
+        let needBase = false;
         prevFloor.forEach((v) => {
           let newItem = this.deepCopy(v);
           newItem.index = v.index + prevFloor.length;
@@ -573,13 +1385,13 @@ export default {
               }
               nextFloor.push(newItem);
               break;
-            case 2001: // 低速传送带
+            case 2001: // 传送带
             case 2002: // 高速传送带
             case 2003: // 极速传送带
-            case 2011: // 低速分拣器
+            case 2011: // 分拣器
             case 2012: // 高速分拣器
             case 2013: // 极速分拣器
-            case 2030: // 流速器
+            case 2030: // 流速监测器
               if (v.outputObjIdx != -1) {
                 newItem.outputObjIdx = v.outputObjIdx + prevFloor.length;
               }
@@ -587,7 +1399,7 @@ export default {
                 newItem.inputObjIdx = v.inputObjIdx + prevFloor.length;
               }
               nextFloor.push(newItem);
-            break;
+              break;
             case 1131: // 地基
               newItem.localOffset[0].z = -10;
               newItem.localOffset[1].z = -10;
@@ -600,19 +1412,20 @@ export default {
               if (v.inputObjIdx != -1) {
                 newItem.inputObjIdx = v.inputObjIdx + prevFloor.length;
               }
-              if (v.inputObjIdx == -1) {
-                newItem.inputObjIdx = prevFloor.length * floors;
+              if (
+                (newItem.localOffset[0].z > 1 || newItem.localOffset[1].z > 1) &&
+                v.inputObjIdx == -1
+              ) {
+                newItem.inputObjIdx = res.buildings.length + prevFloor.length;
                 needBase = true;
               }
               nextFloor.push(newItem);
               break;
           }
         });
-        prevFloor = nextFloor;
-        res.buildings.push(...nextFloor);
-        if(needBase){
-          res.buildings.push({
-            index: res.buildings.length,
+        if (needBase) {
+          nextFloor.push({
+            index: res.buildings.length + prevFloor.length,
             areaIndex: 0,
             localOffset: [
               { x: 0, y: 0, z: -10 },
@@ -634,11 +1447,13 @@ export default {
             parameters: null,
           });
         }
+        prevFloor = nextFloor;
+        res.buildings.push(...nextFloor);
       }
       return res;
     },
     output() {
-      if (!this.formInline.blueprintData) {
+      if (!this.formInline.blueprintData && this.formInline.paramType != "4") {
         this.warning("请先导入数据");
         return;
       }
@@ -657,42 +1472,43 @@ export default {
                 +this.formInline.params.floors,
                 +this.formInline.params.spacing
               );
-              this.$set(this.formInline, "resData", PARSER.toStr(this.formInline.resBlueprintData));
-              this.$set(
-                this.formInline,
-                "resJSON",
-                JSON.stringify(this.formInline.resBlueprintData)
-              );
-              console.log(this.formInline.resBlueprintData);
               break;
             case "1":
-              // 垂直偏移
-              this.formInline.resBlueprintData = this.verticalOffset(
-                this.formInline.blueprintData,
-                +this.formInline.params.offsetZ
-              );
-              this.$set(this.formInline, "resData", PARSER.toStr(this.formInline.resBlueprintData));
-              this.$set(
-                this.formInline,
-                "resJSON",
-                JSON.stringify(this.formInline.resBlueprintData)
-              );
-              console.log(this.formInline.resBlueprintData);
+              // 坐标偏移
+              if (this.formInline.params.offsetType == "vertical") {
+                // 垂直偏移
+                this.formInline.resBlueprintData = this.verticalOffset(
+                  this.formInline.blueprintData,
+                  +this.formInline.params.offsetZ
+                );
+              } else if (this.formInline.params.offsetType == "horizontal") {
+                // 水平偏移
+                this.formInline.resBlueprintData = this.horizontalOffset(
+                  this.formInline.blueprintData,
+                  +this.formInline.params.offsetX,
+                  +this.formInline.params.offsetY
+                );
+              }
               break;
             case "2":
-              // 水平偏移
-              this.formInline.resBlueprintData = this.horizontalOffset(
-                this.formInline.blueprintData,
-                +this.formInline.params.offsetX,
-                +this.formInline.params.offsetY
-              );
-              this.$set(this.formInline, "resData", PARSER.toStr(this.formInline.resBlueprintData));
-              this.$set(
-                this.formInline,
-                "resJSON",
-                JSON.stringify(this.formInline.resBlueprintData)
-              );
-              console.log(this.formInline.resBlueprintData);
+              // 水平翻转
+              if (this.formInline.params.overturnType == "x") {
+                // 横向翻转
+                this.formInline.resBlueprintData = this.linearTransformation(
+                  this.formInline.blueprintData,
+                  -1,
+                  1,
+                  0
+                );
+              } else if (this.formInline.params.overturnType == "y") {
+                // 纵向翻转
+                this.formInline.resBlueprintData = this.linearTransformation(
+                  this.formInline.blueprintData,
+                  1,
+                  -1,
+                  0
+                );
+              }
               break;
             case "3":
               // 线性变换
@@ -702,15 +1518,31 @@ export default {
                 +this.formInline.params.zoomY,
                 +this.formInline.params.rotate
               );
-              this.$set(this.formInline, "resData", PARSER.toStr(this.formInline.resBlueprintData));
-              this.$set(
-                this.formInline,
-                "resJSON",
-                JSON.stringify(this.formInline.resBlueprintData)
-              );
-              console.log(this.formInline.resBlueprintData);
+              break;
+            case "4":
+              // 无中生有
+              switch (this.formInline.params.createType) {
+                case "0":
+                  // 无褶皱垂直传送带
+                  this.formInline.resBlueprintData = this.createVbelt(
+                    this.formInline.params.startZ,
+                    this.formInline.params.endZ
+                  );
+                  break;
+                case "1":
+                  // 虫洞分拣器
+                  this.formInline.resBlueprintData = this.createWinserter(
+                    this.formInline.params.startPoint,
+                    this.formInline.params.endPoint,
+                    this.formInline.params.WinserterDir
+                  );
+                  break;
+              }
               break;
           }
+          console.log(this.formInline.resBlueprintData);
+          this.$set(this.formInline, "resData", PARSER.toStr(this.formInline.resBlueprintData));
+          this.$set(this.formInline, "resJSON", JSON.stringify(this.formInline.resBlueprintData));
         }
       });
     },

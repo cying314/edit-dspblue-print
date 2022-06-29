@@ -364,6 +364,7 @@ const MonitorParamParser = {
         setParam(a, 10, p.systemWarningMode);
         setParam(a, 17, p.systemWarningIconId);
         setParam(a, 12, p.alarmMode);
+        setParam(a, 20, p.spawnItemOperator);
     },
     decode(a) {
         return {
@@ -384,11 +385,18 @@ const MonitorParamParser = {
             systemWarningMode: getParam(a, 10),
             systemWarningIconId: getParam(a, 17),
             alarmMode: getParam(a, 12),
+            spawnItemOperator: getParam(a, 20),
         };
     }
 };
 const unknownParamParser = {
-    encodedSize(p) { return p.parameters.length; },
+    encodedSize(p) {
+        if(p.parameters){
+            return Object.keys(p.parameters).length;
+        }else{
+            return 0;
+        }
+     },
     encode(p, a) {
         for (let i = 0; i < p.parameters.length; i++)
             setParam(a, i, p.parameters[i]);
