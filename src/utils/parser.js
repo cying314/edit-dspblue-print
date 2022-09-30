@@ -88,14 +88,17 @@ function setParam(v, pos, value) {
 const stationDesc = {
     maxItemKind: 3,
     numSlots: 12,
+    flyKinds: [10],
 };
 const interstellarStationDesc = {
     maxItemKind: 5,
     numSlots: 12,
+    flyKinds: [10, 11],
 };
 const AdvancedMiningMachineDesc = {
     maxItemKind: 1,
     numSlots: 9,
+    flyKinds: [],
 };
 export var IODir;
 (function (IODir) {
@@ -128,6 +131,11 @@ function stationParamsParser(desc) {
             setParam(a, base + 6, p.deliveryAmountOfDrones);
             setParam(a, base + 7, p.deliveryAmountOfShips);
             setParam(a, base + 8, p.pilerCount);
+
+            desc.flyKinds?.forEach(num => {
+                setParam(a, base + num, p['autoFill_' + num]);
+            });
+
             {
                 const { base, stride } = stationParamsMeta.storage;
                 for (let i = 0; i < desc.maxItemKind; i++) {
@@ -162,6 +170,11 @@ function stationParamsParser(desc) {
                 deliveryAmountOfShips: getParam(a, base + 7),
                 pilerCount: getParam(a, base + 8),
             };
+
+            desc.flyKinds?.forEach(num => {
+                result['autoFill_' + num] = getParam(a, base + num);
+            });
+
             {
                 const { base, stride } = stationParamsMeta.storage;
                 for (let i = 0; i < desc.maxItemKind; i++) {
@@ -389,14 +402,33 @@ const MonitorParamParser = {
         };
     }
 };
+const distributorParser = {
+    encodedSize() {
+        return 128;
+    },
+    encode(p, a) {
+        setParam(a, 0, p.fromMyselfMode);
+        setParam(a, 1, p.fromOtherMode);
+        setParam(a, 2, p.workEnergyPerTick);
+        setParam(a, 3, p.autoFill);
+    },
+    decode(a) {
+        return {
+            fromMyselfMode: getParam(a, 0),
+            fromOtherMode: getParam(a, 1),
+            workEnergyPerTick: getParam(a, 2),
+            autoFill: getParam(a, 3),
+        }
+    },
+};
 const unknownParamParser = {
     encodedSize(p) {
-        if(p.parameters){
+        if (p.parameters) {
             return Object.keys(p.parameters).length;
-        }else{
+        } else {
             return 0;
         }
-     },
+    },
     encode(p, a) {
         for (let i = 0; i < p.parameters.length; i++)
             setParam(a, i, p.parameters[i]);
@@ -429,6 +461,7 @@ const parameterParsers = new Map([
     [2208, powerGeneratorParamParser],
     [2209, energyExchangerParamParser],
     [2030, MonitorParamParser],
+    [2107, distributorParser],
 ]);
 for (const id of allAssemblers) {
     parameterParsers.set(id, assembleParamParser);

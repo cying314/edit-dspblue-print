@@ -49,7 +49,7 @@
                         <p>{{item.name}}</p>
                       </template>
                       <div class="item">
-                        <img class="icon" :src="getIcon(item.icon)">
+                        <img class="icon" :src="getIcon(item)">
                         <div class="count">{{item.count}}</div>
                       </div>
                     </el-tooltip>
@@ -339,7 +339,7 @@
                         <p>{{item.name}}</p>
                       </template>
                       <div class="item">
-                        <img class="icon" :src="getIcon(item.icon)">
+                        <img class="icon" :src="getIcon(item)">
                         <div class="count">{{item.count}}</div>
                       </div>
                     </el-tooltip>
@@ -632,7 +632,9 @@ export default {
     });
   },
   methods: {
-    getIcon(icon) {
+    getIcon(item) {
+      let icon = item?.icon;
+      if(!icon) return null;
       try {
         return require("@/assets/images/" + icon + ".png");
       } catch (e) {
@@ -650,8 +652,8 @@ export default {
         return {
           itemId: k,
           count: tmpObj[k],
-          icon: itemInfo.icon,
-          name: itemInfo.name,
+          icon: itemInfo?.icon,
+          name: itemInfo?.name || `未知物品_${k}`,
         };
       });
       return itemList;
@@ -1027,6 +1029,15 @@ export default {
           },
         },
         {
+          itemId: 2317, // 量子化工厂
+          indexs: [],
+          axis: "y",
+          alterSlot: {
+            x: { 0: 7, 1: 2, 2: 1, 3: 6, 4: 5, 5: 4, 6: 3, 7: 0 },
+            y: { 0: 6, 1: 5, 2: 4, 3: 7, 4: 2, 5: 1, 6: 0, 7: 3 },
+          },
+        },
+        {
           itemId: 2310, // 微型粒子对撞机
           indexs: [],
           axis: "y",
@@ -1162,8 +1173,8 @@ export default {
             v.localOffset[0].y -= 1 * Math.sin((v.yaw[0] * Math.PI) / 180);
             v.localOffset[1].y -= 1 * Math.sin((v.yaw[1] * Math.PI) / 180);
           }
-          if (v.itemId == 2309) {
-            // 化工厂翻转偏移
+          if (v.itemId == 2309 || v.itemId == 2317) {
+            // 化工厂、量子化工厂翻转偏移
             v.localOffset[0].x -= 1 * Math.sin((v.yaw[0] * Math.PI) / 180);
             v.localOffset[1].x -= 1 * Math.sin((v.yaw[1] * Math.PI) / 180);
             v.localOffset[0].y -= 1 * Math.cos((v.yaw[0] * Math.PI) / 180);
@@ -1358,7 +1369,7 @@ export default {
       });
     },
     verticalCopy(blueprintData, floors, spacing) {
-      // 垂直复制
+      // 垂直叠加
       let res = this.verticalOffset(blueprintData, 0, (floors - 1) * spacing); // 深拷贝，并给悬空建筑建地基底
       let buildings = res.buildings;
       let prevFloor = buildings;
@@ -1466,7 +1477,7 @@ export default {
           }
           switch (paramType) {
             case "0":
-              // 垂直复制
+              // 垂直叠加
               this.formInline.resBlueprintData = this.verticalCopy(
                 this.formInline.blueprintData,
                 +this.formInline.params.floors,

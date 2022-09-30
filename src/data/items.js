@@ -42,14 +42,18 @@ export function isAdvancedMiningMachine(id) {
 export function isMonitor(id) {
     return id === 2030;
 }
+export function isDistributor(id) {
+    return id === 2107;
+}
 export const allAssemblers = new Set([
-    2303, // 制造台
-    2304,
-    2305,
+    2303, // 制造台 Mk.I
+    2304, // 制造台 Mk.II
+    2305, // 制造台 Mk.III
     2302, // 电弧熔炉
     2315, // 位面熔炉
     2308, // 原油精炼厂
     2309, // 化工厂
+    2317, // 量子化工厂
     2310, // 对撞机
     2312, // 垂直发射井
 ]);
