@@ -10,6 +10,9 @@
             <el-menu-item index="-1">
               <span slot="title">联系作者</span>
             </el-menu-item>
+            <el-menu-item index="-2">
+              <span slot="title">查看更新(当前版本：v3.4)</span>
+            </el-menu-item>
           </el-menu>
         </el-scrollbar>
       </div>
@@ -84,7 +87,7 @@
                         <template slot="label">
                           <el-tooltip class="item" effect="dark" placement="top">
                             <template slot="content">
-                              <p>常见可叠加物品的单层高度：</p>
+                              <p>常见物品的单层高度：</p>
                               <p>四向分流器：2</p>
                               <p>自动集装器：2</p>
                               <p>小型储物仓：2</p>
@@ -98,6 +101,29 @@
                         </template>
                         <el-input type="number" v-model="formInline.params.spacing">
                         </el-input>
+                      </el-form-item>
+                    </div>
+                    <div class="flex">
+                      <el-form-item label="各层关系：" prop="params.isPile">
+                        <el-radio-group v-model="formInline.params.isPile">
+                          <el-radio :label="true">
+                            <el-tooltip class="item" effect="dark" placement="top">
+                              <template slot="content">
+                                <p>*叠加后可堆叠的建筑将建立游戏内的堆叠关系，如箱子将互通</p>
+                                <p>可堆叠物品：四向分流器、自动集装器、小型储物仓、大型储物仓、储液罐、矩阵研究站、喷涂机</p>
+                              </template>
+                              <span>堆叠<i class="el-icon-question "></i></span>
+                            </el-tooltip>
+                          </el-radio>
+                          <el-radio :label="false">
+                            <el-tooltip class="item" effect="dark" placement="top">
+                              <template slot="content">
+                                <p>*叠加后每层独立运作</p>
+                              </template>
+                              <span>独立<i class="el-icon-question "></i></span>
+                            </el-tooltip>
+                          </el-radio>
+                        </el-radio-group>
                       </el-form-item>
                     </div>
                   </template>
@@ -391,6 +417,7 @@ export default {
         params: {
           floors: 2,
           spacing: 2,
+          isPile: true,
           offsetType: "vertical",
           offsetX: 0.5,
           offsetY: 0.5,
@@ -1257,9 +1284,8 @@ export default {
       });
       return res;
     },
-    verticalOffset(blueprintData, offsetZ, moveZ = 0) {
+    verticalOffset(blueprintData, offsetZ) {
       // 垂直偏移
-      // moveZ 垂直复制时移动的距离
       let res = this.deepCopy(blueprintData);
       let needBase = false; // 是否卡地基浮空
       let changIndex = false; // 是否变更index顺序
@@ -1271,15 +1297,27 @@ export default {
         switch (v.itemId) {
           case 2020: // 四向分流器
           case 2040: // 自动集装器
-          case 2101: // 小型储物仓
-          case 2102: // 大型储物仓
           case 2106: // 储液罐
-          case 2901: // 矩阵研究站
+            // 可堆叠建筑 
             if ((v.localOffset[0].z > 1 || v.localOffset[1].z > 1) && v.inputObjIdx == -1) {
               v.inputObjIdx = res.buildings.length;
               needBase = true;
             }
             newBuildings.push(v);
+            break;
+          case 2101: // 小型储物仓
+          case 2102: // 大型储物仓
+          case 2901: // 矩阵研究站
+            // 带分拣器的可堆叠建筑 
+            if ((v.localOffset[0].z > 1 || v.localOffset[1].z > 1) && v.inputObjIdx == -1) {
+              v.inputObjIdx = res.buildings.length;
+              needBase = true;
+              // 悬空建筑如果先建分拣器会导致输出端链接失效，判断建筑为悬空建筑时挪到最前面
+              newBuildings.unshift(v);
+              changIndex = true;
+            } else {
+              newBuildings.push(v);
+            }
             break;
           case 2001: // 传送带
           case 2002: // 高速传送带
@@ -1303,20 +1341,10 @@ export default {
             newBuildings.push(v);
             break;
           default:
-            var z1 = v.localOffset[0].z;
-            var z2 = v.localOffset[1].z;
-            var inputObjIdx = v.inputObjIdx;
-            if ((z1 > 1 || z2 > 1) && inputObjIdx == -1) {
-              needBase = true;
+            if ((v.localOffset[0].z > 1 || v.localOffset[1].z > 1) && v.inputObjIdx == -1) {
               v.inputObjIdx = res.buildings.length;
-            }
-            // 悬空建筑如果先建分拣器会导致输入端链接失效，判断建筑为悬空建筑时（或垂直复制后最顶层为悬空时）往前移动
-            if (
-              (z1 + moveZ > 1 || z2 + moveZ > 1) &&
-              inputObjIdx == -1
-              //  && inserterList.some((v2) => v2.outputObjIdx == v.index) // 是否存在outputObjIdx是当前建筑、index比当前建筑小的第一个分拣器
-            ) {
-              // 将符合条件的建筑挪到最前面
+              needBase = true;
+              // 悬空建筑如果先建分拣器会导致输出端链接失效，判断建筑为悬空建筑时挪到最前面
               newBuildings.unshift(v);
               changIndex = true;
             } else {
@@ -1368,14 +1396,13 @@ export default {
         if (v.inputObjIdx != -1) v.inputObjIdx = indexMap[v.inputObjIdx];
       });
     },
-    verticalCopy(blueprintData, floors, spacing) {
+    verticalCopy(blueprintData, floors, spacing, isPile=true) {
       // 垂直叠加
-      let res = this.verticalOffset(blueprintData, 0, (floors - 1) * spacing); // 深拷贝，并给悬空建筑建地基底
+      let res = this.deepCopy(blueprintData); // 深拷贝
       let buildings = res.buildings;
       let prevFloor = buildings;
       for (let i = 2; i <= floors; i++) {
         let nextFloor = [];
-        let needBase = false;
         prevFloor.forEach((v) => {
           let newItem = this.deepCopy(v);
           newItem.index = v.index + prevFloor.length;
@@ -1389,10 +1416,16 @@ export default {
             case 2106: // 储液罐
             case 2901: // 矩阵研究站
             case 2313: // 喷涂机
-              if (v.inputObjIdx == -1) {
-                newItem.inputObjIdx = this.findUppermost(prevFloor, v.itemId, v.index);
-              } else {
+              if (v.outputObjIdx != -1) {
+                newItem.outputObjIdx = v.outputObjIdx + prevFloor.length;
+              }
+              if (v.inputObjIdx != -1) {
                 newItem.inputObjIdx = v.inputObjIdx + prevFloor.length;
+              } else {
+                if(isPile){
+                  // 堆叠,递归找到可叠加节点的最高层
+                  newItem.inputObjIdx = this.findUppermost(prevFloor, v.itemId, v.index);
+                }
               }
               nextFloor.push(newItem);
               break;
@@ -1423,44 +1456,14 @@ export default {
               if (v.inputObjIdx != -1) {
                 newItem.inputObjIdx = v.inputObjIdx + prevFloor.length;
               }
-              if (
-                (newItem.localOffset[0].z > 1 || newItem.localOffset[1].z > 1) &&
-                v.inputObjIdx == -1
-              ) {
-                newItem.inputObjIdx = res.buildings.length + prevFloor.length;
-                needBase = true;
-              }
               nextFloor.push(newItem);
               break;
           }
         });
-        if (needBase) {
-          nextFloor.push({
-            index: res.buildings.length + prevFloor.length,
-            areaIndex: 0,
-            localOffset: [
-              { x: 0, y: 0, z: -10 },
-              { x: 0, y: 0, z: -10 },
-            ],
-            yaw: [0, 0],
-            itemId: 1131,
-            modelIndex: 37,
-            outputObjIdx: -1,
-            inputObjIdx: -1,
-            outputToSlot: 0,
-            inputFromSlot: 0,
-            outputFromSlot: 0,
-            inputToSlot: 1,
-            outputOffset: 0,
-            inputOffset: 0,
-            recipeId: 0,
-            filterId: 0,
-            parameters: null,
-          });
-        }
         prevFloor = nextFloor;
         res.buildings.push(...nextFloor);
       }
+      res = this.verticalOffset(res, 0); // 给悬空建筑建地基底
       return res;
     },
     output() {
@@ -1481,7 +1484,8 @@ export default {
               this.formInline.resBlueprintData = this.verticalCopy(
                 this.formInline.blueprintData,
                 +this.formInline.params.floors,
-                +this.formInline.params.spacing
+                +this.formInline.params.spacing,
+                this.formInline.params.isPile,
               );
               break;
             case "1":
@@ -1653,7 +1657,12 @@ export default {
     },
     jump(index) {
       if (index == "-1") {
-        window.open("https://space.bilibili.com/34117233");
+        // window.open("https://space.bilibili.com/34117233");
+        window.open("https://www.bilibili.com/video/BV1kr4y1V73y");
+        return;
+      }
+      if (index == "-2") {
+        window.open("https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666");
         return;
       }
       let _this = this;
@@ -1794,7 +1803,7 @@ export default {
         /deep/.el-card__header {
           line-height: 32px;
           padding: 12px 20px;
-          min-width: 330px;
+          // min-width: 330px;
           .card_header {
             display: flex;
             justify-content: space-between;
@@ -1802,13 +1811,17 @@ export default {
           }
         }
         .el-form {
-          min-width: 330px;
+          // min-width: 330px;
           /deep/.el-form-item__error {
             position: unset;
           }
           .flex {
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
+            .el-input{
+              min-width: 60px;
+            }
             .el-icon-link {
               width: 3%;
               margin-left: 3%;

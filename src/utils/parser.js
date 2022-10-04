@@ -86,7 +86,7 @@ function setParam(v, pos, value) {
     v.setInt32(pos * Int32Array.BYTES_PER_ELEMENT, value, true);
 }
 const stationDesc = {
-    maxItemKind: 3,
+    maxItemKind: 4,
     numSlots: 12,
     flyKinds: [10],
 };
