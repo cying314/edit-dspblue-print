@@ -11,7 +11,7 @@
               <span slot="title">联系作者</span>
             </el-menu-item>
             <el-menu-item index="-2">
-              <span slot="title">查看更新(当前版本：v3.4)</span>
+              <span slot="title">查看更新(当前版本：v4)</span>
             </el-menu-item>
           </el-menu>
         </el-scrollbar>
@@ -74,6 +74,7 @@
                       <el-radio label="2">水平翻转</el-radio>
                       <el-radio label="3">线性变换</el-radio>
                       <el-radio label="4">无中生有(无需导入)</el-radio>
+                      <el-radio label="5">无带流</el-radio>
                     </el-radio-group>
                   </el-form-item>
                   <template v-if="formInline.paramType=='0'">
@@ -104,7 +105,7 @@
                       </el-form-item>
                     </div>
                     <div class="flex">
-                      <el-form-item label="各层关系：" prop="params.isPile">
+                      <el-form-item label="各层关系：" prop="params.isPile" :rules="rules.selectNotNull">
                         <el-radio-group v-model="formInline.params.isPile">
                           <el-radio :label="true">
                             <el-tooltip class="item" effect="dark" placement="top">
@@ -130,7 +131,7 @@
                   <template v-if="formInline.paramType=='1'">
                     <!-- 坐标偏移 -->
                     <div class="flex">
-                      <el-form-item label="偏移方向：" prop="params.offsetType" key="offsetType">
+                      <el-form-item label="偏移方向：" prop="params.offsetType" key="offsetType" :rules="rules.selectNotNull">
                         <el-radio-group v-model="formInline.params.offsetType">
                           <el-radio label="vertical">
                             <el-tooltip class="item" effect="dark" placement="top">
@@ -152,7 +153,7 @@
                               <template slot="content">
                                 <p>基于0相对偏移</p>
                               </template>
-                              <span>垂直偏移量：<i class="el-icon-question "></i></span>
+                              <span>垂直偏移量<i class="el-icon-question "></i>：</span>
                             </el-tooltip>
                           </template>
                           <el-input type="number" v-model="formInline.params.offsetZ">
@@ -166,7 +167,7 @@
                               <template slot="content">
                                 <p>基于0相对偏移</p>
                               </template>
-                              <span>横向偏移量：<i class="el-icon-question "></i></span>
+                              <span>横向偏移量<i class="el-icon-question "></i>：</span>
                             </el-tooltip>
                           </template>
                           <el-input type="number" v-model="formInline.params.offsetX">
@@ -190,13 +191,13 @@
                   <template v-if="formInline.paramType=='2'">
                     <!-- 水平翻转 -->
                     <div class="flex">
-                      <el-form-item label="翻转方向：" prop="params.overturnType" key="overturnType">
+                      <el-form-item label="翻转方向：" prop="params.overturnType" key="overturnType" :rules="rules.selectNotNull">
                         <template slot="label">
                           <el-tooltip class="item" effect="dark" placement="top">
                             <template slot="content">
                               <p>火力发电厂、微型聚变发电站的分拣器接口不对称，翻转后不对称的那个接口会无法连接</p>
                             </template>
-                            <span>翻转方向：<i class="el-icon-question "></i></span>
+                            <span>翻转方向<i class="el-icon-question "></i>：</span>
                           </el-tooltip>
                         </template>
                         <el-radio-group v-model="formInline.params.overturnType">
@@ -217,7 +218,7 @@
                               <p>输入负数可横向翻转</p>
                               <p>*高纬度过密建筑提示建筑碰撞的蓝图，可用1.1放大蓝图间隙解决</p>
                             </template>
-                            <span>横向放缩量：<i class="el-icon-question "></i></span>
+                            <span>横向放缩量<i class="el-icon-question "></i>：</span>
                           </el-tooltip>
                         </template>
                         <el-input type="number" v-model="formInline.params.zoomX">
@@ -231,7 +232,7 @@
                               <p>输入负数可纵向翻转</p>
                               <p>*高纬度过密建筑提示建筑碰撞的蓝图，可用1.1放大蓝图间隙解决</p>
                             </template>
-                            <span>纵向放缩量：<i class="el-icon-question "></i></span>
+                            <span>纵向放缩量<i class="el-icon-question "></i>：</span>
                           </el-tooltip>
                         </template>
                         <el-input type="number" v-model="formInline.params.zoomY">
@@ -243,7 +244,7 @@
                             <template slot="content">
                               <p>-360至360</p>
                             </template>
-                            <span>旋转角度：<i class="el-icon-question "></i></span>
+                            <span>旋转角度<i class="el-icon-question "></i>：</span>
                           </el-tooltip>
                         </template>
                         <el-input type="number" v-model="formInline.params.rotate">
@@ -254,7 +255,7 @@
                   <template v-if="formInline.paramType=='4'">
                     <!-- 无中生有 -->
                     <div class="flex">
-                      <el-form-item label="生成内容：" prop="params.createType">
+                      <el-form-item label="生成内容：" prop="params.createType" :rules="rules.selectNotNull">
                         <el-radio-group v-model="formInline.params.createType">
                           <el-radio label="0">
                             <el-tooltip class="item" effect="dark" placement="top">
@@ -331,6 +332,42 @@
                       </div>
                     </template>
                   </template>
+                  <template v-if="formInline.paramType=='5'">
+                    <!-- 无带流 -->
+                    <el-form-item label="1、供料：">
+                      <div>
+                        分拣器<b>过滤物品A</b> 且 输入端失效，匹配传送带<b>图标标签为A</b> 且 <b>标记数为负数</b>的传送带节点作为输入端
+                      </div>
+                    </el-form-item>
+                    <el-form-item label="2、产出：">
+                      <div>
+                        分拣器<b>过滤物品A</b> 且 输出端失效，匹配传送带<b>图标标签为A</b> 且 <b>标记数为正数</b>的传送带节点作为输出端
+                      </div>
+                    </el-form-item>
+                    <el-form-item label="3、标记数：">
+                      <div>
+                        传送带图标标签下的<b>标记数必须为正数或负数</b>，不匹配0。
+                      </div>
+                      <div>
+                        标记数的<b>正负</b>用于控制传送带节点是<b>放入还是取出</b>；<b>数值</b>用于控制可接入的<b>分拣器总速度上限</b>
+                      </div>
+                      <div>
+                        (分拣器速度受长度影响，长度1格时速度为：蓝6/绿3/黄1.5，具体看游戏内分拣器属性)
+                      </div>
+                      <div>
+                        如“-30”代表可接入5个蓝爪的输入端(拿走传送带上的物品)，“9”代表可接入1个蓝爪+1个绿爪的输出端(往传送带上的放置物品)
+                      </div>
+                      <div>
+                        一个传送带节点超出接入上限将匹配下一个符合条件的节点进行接入
+                      </div>
+                      <div>
+                        导入时传送带上已有的分拣器链接也会计入总速度
+                      </div>
+                      <div>
+                        <a href="https://www.bilibili.com/video/BV1kr4y1V73y" target="_blank">操作视频教程</a>
+                      </div>
+                    </el-form-item>
+                  </template>
                 </el-form>
               </div>
             </el-card>
@@ -377,6 +414,19 @@
         </el-scrollbar>
       </div>
     </div>
+    <el-dialog title="匹配结果" :visible.sync="NBM_dia">
+      <template v-if="NBM_failMap.length==0">
+        <div>成功新增匹配分拣器端口数：{{NBM_successNum}}</div>
+        <br>
+        <div style="color: green">带过滤器的分拣器端口已全部匹配成功！</div>
+      </template>
+      <template v-else>
+        <div>成功新增匹配分拣器端口数：{{NBM_successNum}}</div>
+        <br>
+        <div style="color: red">存在未匹配上的分拣器端口，如下：</div>
+        <el-tree :data="NBM_failMap" :props="NBM_props" default-expand-all></el-tree>
+      </template>
+    </el-dialog>
     <div class="loading-mask" v-if="fullscreenLoading">
       <div class="loading-spinner">
         <svg viewBox="25 25 50 50" class="circular">
@@ -429,15 +479,15 @@ export default {
           createType: "0",
           startZ: 0,
           endZ: 10,
-          startPoint:{
+          startPoint: {
             X: 0,
             Y: 0,
-            Z: 0
+            Z: 0,
           },
-          endPoint:{
+          endPoint: {
             X: -6,
             Y: 4,
-            Z: 0
+            Z: 0,
           },
           WinserterDir: "left",
         },
@@ -452,6 +502,17 @@ export default {
             required: true,
             message: "不能为空",
             trigger: "blur",
+          },
+        ],
+        selectNotNull: [
+          {
+            validator: (rule, value, callback) => {
+              if (!value && value !== 0 && value !== false) {
+                return callback(new Error("请选择"));
+              }
+              callback();
+            },
+            trigger: "change",
           },
         ],
         "params.floors": [
@@ -648,6 +709,14 @@ export default {
       showLoadingBar: false,
       loadingNow: 0,
       fileList: [],
+      // 无带流匹配结果弹窗
+      NBM_failMap: [],
+      NBM_successNum: 0,
+      NBM_dia: false,
+      NBM_props: {
+        children: "children",
+        label: "label",
+      },
     };
   },
   mounted() {
@@ -661,7 +730,7 @@ export default {
   methods: {
     getIcon(item) {
       let icon = item?.icon;
-      if(!icon) return null;
+      if (!icon) return null;
       try {
         return require("@/assets/images/" + icon + ".png");
       } catch (e) {
@@ -695,6 +764,175 @@ export default {
     },
     deepCopy(obj) {
       return JSON.parse(JSON.stringify(obj));
+    },
+    noBeltMethod(blueprintData) {
+      // 无带流（根据标记匹配分拣器输入输出端）
+      let res = this.deepCopy(blueprintData);
+      let beltMap = {
+        in: {
+          // 标记物品iconId: {传送带index:{传送带标记数count,已链接速度speed}}
+        },
+        out: {
+          // 标记物品iconId: {传送带index:{传送带标记数count,已链接速度speed}}
+        },
+      };
+      this.NBM_failMap = []; // 未匹配上的分拣器端口
+      this.NBM_successNum = 0;
+      let addFail = (filterId, itemId, type) => {
+        let filterName = itemsData.find((d) => d.id == filterId)?.name || `未知物品_${filterId}`;
+        let itemName =
+          itemId == 2011
+            ? "分拣器(黄爪)"
+            : itemId == 2012
+            ? "高速分拣器(绿爪)"
+            : "极速分拣器(蓝爪)";
+        let item1 = this.NBM_failMap.find((item) => item.label == filterName);
+        if (!item1) {
+          item1 = {
+            label: filterName,
+            itemId: filterId,
+            children: [],
+          };
+          this.NBM_failMap.push(item1);
+        }
+        let item2 = item1.children.find((item) => item.label == itemName);
+        if (!item2) {
+          item2 = {
+            label: itemName,
+            itemId: itemId,
+            children: [],
+          };
+          item1.children.push(item2);
+        }
+        let item3 = item2.children.find((item) => item.type == type);
+        if (!item3) {
+          item3 = {
+            label: type + "：1",
+            type: type,
+            num: 1,
+          };
+          item2.children.push(item3);
+        } else {
+          item3.num += 1;
+          item3.label = `${item3.type}：${item3.num}`;
+        }
+      };
+      res.buildings.forEach((v) => {
+        switch (v.itemId) {
+          case 2001: // 传送带
+          case 2002: // 高速传送带
+          case 2003: // 极速传送带
+            var count = v.parameters?.count;
+            var iconId = v.parameters?.iconId;
+            if (count && iconId) {
+              var type = "in";
+              if (count < 0) {
+                type = "out";
+                // 解决官方负数标记数复制后会+1的bug
+                count -= 1;
+                v.parameters.count = count;
+              }
+              if (!beltMap[type][iconId]) beltMap[type][iconId] = {};
+              if (!beltMap[type][iconId][v.index]) {
+                beltMap[type][iconId][v.index] = {
+                  count: Math.abs(count),
+                  speed: 0,
+                };
+              } else {
+                beltMap[type][iconId][v.index].count = Math.abs(count);
+              }
+            }
+            break;
+          case 2011: // 分拣器
+          case 2012: // 高速分拣器
+          case 2013: // 极速分拣器
+            if (v.filterId) {
+              // 分拣器已链接的输入输出端的总速度也计入Map中，非传送带或未标记传送带的输入输出端count为0
+              var Speed = v.itemId == 2011 ? 1.5 : v.itemId == 2012 ? 3 : 6;
+              Speed /= v.parameters.length || 1; // 计入分拣器长度
+              if (v.outputObjIdx != -1) {
+                if (!beltMap.in[v.filterId]) beltMap.in[v.filterId] = {};
+                if (!beltMap.in[v.filterId][v.outputObjIdx]) {
+                  beltMap.in[v.filterId][v.outputObjIdx] = {
+                    count: 0,
+                    speed: Speed,
+                  };
+                } else {
+                  beltMap.in[v.filterId][v.outputObjIdx].speed += Speed;
+                }
+              }
+              if (v.inputObjIdx != -1) {
+                if (!beltMap.out[v.filterId]) beltMap.out[v.filterId] = {};
+                if (!beltMap.out[v.filterId][v.inputObjIdx]) {
+                  beltMap.out[v.filterId][v.inputObjIdx] = {
+                    count: 0,
+                    speed: Speed,
+                  };
+                } else {
+                  beltMap.out[v.filterId][v.inputObjIdx].speed += Speed;
+                }
+              }
+            }
+            break;
+        }
+      });
+      res.buildings.forEach((v) => {
+        switch (v.itemId) {
+          case 2011: // 分拣器
+          case 2012: // 高速分拣器
+          case 2013: // 极速分拣器
+            if (v.filterId) {
+              var Speed = v.itemId == 2011 ? 1.5 : v.itemId == 2012 ? 3 : 6;
+              Speed /= v.parameters.length || 1; // 计入分拣器长度
+              // 输出端
+              if (v.outputObjIdx == -1) {
+                var indexMap = beltMap.in[v.filterId];
+                if (indexMap) {
+                  // count为0的不一定是传送带，不匹配
+                  var index = Object.keys(indexMap).find(
+                    (idx) =>
+                      indexMap[idx].count && indexMap[idx].speed + Speed <= indexMap[idx].count
+                  );
+                  if (index || index === 0) {
+                    v.outputObjIdx = +index;
+                    v.outputToSlot = -1; // 传送带接口为-1
+                    indexMap[index].speed += Speed;
+                    this.NBM_successNum += 1;
+                  } else {
+                    addFail(v.filterId, v.itemId, "输出端");
+                  }
+                } else {
+                  addFail(v.filterId, v.itemId, "输出端");
+                }
+              }
+              // 输入端
+              if (v.inputObjIdx == -1) {
+                let indexMap = beltMap.out[v.filterId];
+                if (indexMap) {
+                  // count为0的不一定是传送带，不匹配
+                  let index = Object.keys(indexMap).find(
+                    (idx) =>
+                      indexMap[idx].count && indexMap[idx].speed + Speed <= indexMap[idx].count
+                  );
+                  if (index || index === 0) {
+                    v.inputObjIdx = +index;
+                    v.inputFromSlot = -1; // 传送带接口为-1
+                    indexMap[index].speed += Speed;
+                    this.NBM_successNum += 1;
+                  } else {
+                    addFail(v.filterId, v.itemId, "输入端");
+                  }
+                } else {
+                  addFail(v.filterId, v.itemId, "输入端");
+                }
+              }
+            }
+            break;
+        }
+      });
+      console.log(beltMap, "IOMap");
+      this.NBM_dia = true;
+      return res;
     },
     newBlueprint(name) {
       return {
@@ -856,23 +1094,23 @@ export default {
         })
       );
       // 分拣器
-      let offsetObj = { x: startPointX-1, y: startPointY, z: startPointZ };
+      let offsetObj = { x: startPointX - 1, y: startPointY, z: startPointZ };
       let yaw = [270, 270];
       switch (WinserterDir) {
         case "left":
-          offsetObj = { x: startPointX-1, y: startPointY, z: startPointZ };
+          offsetObj = { x: startPointX - 1, y: startPointY, z: startPointZ };
           yaw = [270, 270];
           break;
         case "right":
-          offsetObj = { x: startPointX+1, y: startPointY, z: startPointZ };
+          offsetObj = { x: startPointX + 1, y: startPointY, z: startPointZ };
           yaw = [90, 90];
           break;
         case "top":
-          offsetObj = { x: startPointX, y: startPointY+1, z: startPointZ };
+          offsetObj = { x: startPointX, y: startPointY + 1, z: startPointZ };
           yaw = [0, 0];
           break;
         case "bottom":
-          offsetObj = { x: startPointX, y: startPointY-1, z: startPointZ };
+          offsetObj = { x: startPointX, y: startPointY - 1, z: startPointZ };
           yaw = [180, 180];
           break;
       }
@@ -1298,7 +1536,7 @@ export default {
           case 2020: // 四向分流器
           case 2040: // 自动集装器
           case 2106: // 储液罐
-            // 可堆叠建筑 
+            // 可堆叠建筑
             if ((v.localOffset[0].z > 1 || v.localOffset[1].z > 1) && v.inputObjIdx == -1) {
               v.inputObjIdx = res.buildings.length;
               needBase = true;
@@ -1308,7 +1546,7 @@ export default {
           case 2101: // 小型储物仓
           case 2102: // 大型储物仓
           case 2901: // 矩阵研究站
-            // 带分拣器的可堆叠建筑 
+            // 带分拣器的可堆叠建筑
             if ((v.localOffset[0].z > 1 || v.localOffset[1].z > 1) && v.inputObjIdx == -1) {
               v.inputObjIdx = res.buildings.length;
               needBase = true;
@@ -1396,7 +1634,7 @@ export default {
         if (v.inputObjIdx != -1) v.inputObjIdx = indexMap[v.inputObjIdx];
       });
     },
-    verticalCopy(blueprintData, floors, spacing, isPile=true) {
+    verticalCopy(blueprintData, floors, spacing, isPile = true) {
       // 垂直叠加
       let res = this.deepCopy(blueprintData); // 深拷贝
       let buildings = res.buildings;
@@ -1422,7 +1660,7 @@ export default {
               if (v.inputObjIdx != -1) {
                 newItem.inputObjIdx = v.inputObjIdx + prevFloor.length;
               } else {
-                if(isPile){
+                if (isPile) {
                   // 堆叠,递归找到可叠加节点的最高层
                   newItem.inputObjIdx = this.findUppermost(prevFloor, v.itemId, v.index);
                 }
@@ -1485,7 +1723,7 @@ export default {
                 this.formInline.blueprintData,
                 +this.formInline.params.floors,
                 +this.formInline.params.spacing,
-                this.formInline.params.isPile,
+                this.formInline.params.isPile
               );
               break;
             case "1":
@@ -1553,6 +1791,10 @@ export default {
                   );
                   break;
               }
+              break;
+            case "5":
+              // 无带流
+              this.formInline.resBlueprintData = this.noBeltMethod(this.formInline.blueprintData);
               break;
           }
           console.log(this.formInline.resBlueprintData);
@@ -1819,7 +2061,7 @@ export default {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
-            .el-input{
+            .el-input {
               min-width: 60px;
             }
             .el-icon-link {
