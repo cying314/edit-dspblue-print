@@ -364,7 +364,7 @@
                         导入时传送带上已有的分拣器链接也会计入总速度
                       </div>
                       <div>
-                        <a href="https://www.bilibili.com/video/BV1kr4y1V73y" target="_blank">操作视频教程</a>
+                        <a href="https://www.bilibili.com/video/BV138411x7Sn" target="_blank">操作视频教程</a>
                       </div>
                     </el-form-item>
                   </template>
