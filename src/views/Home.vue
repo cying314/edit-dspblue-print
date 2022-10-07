@@ -339,6 +339,7 @@
                         <el-tooltip class="item" effect="dark" placement="top">
                           <template slot="content">
                             <p>根据需求选择更改传送带节点的图标标记数，选择“原标记数”为不更改</p>
+                            <p>*只有原标记数为正数/负数的节点会进行统计</p>
                           </template>
                           <span>输出标记数<i class="el-icon-question "></i>：</span>
                         </el-tooltip>
