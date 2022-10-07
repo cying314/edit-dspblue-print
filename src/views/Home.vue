@@ -334,17 +334,20 @@
                   </template>
                   <template v-if="formInline.paramType=='5'">
                     <!-- 无带流 -->
-                    <el-form-item label="输出节点最终匹配速度：" prop="params.outputSpeed" key="outputSpeed">
+                    <el-form-item label="输出标记数：" prop="params.outputCountMode" key="outputCountMode" :rules="rules.selectNotNull">
                       <template slot="label">
                         <el-tooltip class="item" effect="dark" placement="top">
                           <template slot="content">
-                            <p>勾选后，传送带节点下的标记数，将改为该节点最终链接的分拣器总速度</p>
+                            <p>根据需求选择更改传送带节点的图标标记数，选择“原标记数”为不更改</p>
                           </template>
-                          <span>输出节点最终匹配速度<i class="el-icon-question "></i>：</span>
+                          <span>输出标记数<i class="el-icon-question "></i>：</span>
                         </el-tooltip>
                       </template>
-                      <el-checkbox v-model="formInline.params.outputSpeed">
-                      </el-checkbox>
+                      <el-radio-group v-model="formInline.params.outputCountMode">
+                          <el-radio label="speed">最终匹配的分拣器速度</el-radio>
+                          <el-radio label="num">最终匹配的分拣器数量</el-radio>
+                          <el-radio label="none">原标记数</el-radio>
+                        </el-radio-group>
                     </el-form-item>
                     <el-form-item label="1、供料：">
                       <div>
@@ -505,7 +508,7 @@ export default {
             Z: 0,
           },
           WinserterDir: "left",
-          outputSpeed: true,
+          outputCountMode: 'speed',
         },
         resBlueprintData: null,
         resType: "blueprint",
@@ -781,7 +784,7 @@ export default {
     deepCopy(obj) {
       return JSON.parse(JSON.stringify(obj));
     },
-    noBeltMethod(blueprintData, outputSpeed) {
+    noBeltMethod(blueprintData, outputCountMode) {
       // 无带流（根据标记匹配分拣器输入输出端）
       let res = this.verticalOffset(blueprintData, 0); // 深拷贝，并处理悬空建筑
       let IOMap = {
@@ -864,10 +867,13 @@ export default {
               }
               if (!linkNum[v.index]) linkNum[v.index] = 0;
 
-              if (outputSpeed) {
+              if (outputCountMode == 'speed') {
                 // 输出已匹配速度
                 IOMap[type][iconId][v.index].beltItem.parameters.count =
                   (type == "in" ? 1 : -1) * IOMap[type][iconId][v.index].speed;
+              } else if (outputCountMode == 'num') {
+                // 输出已匹配数量
+                IOMap[type][iconId][v.index].beltItem.parameters.count = linkNum[v.index];
               }
             }
             break;
@@ -895,10 +901,15 @@ export default {
                   linkNum[v.outputObjIdx]++;
                 }
 
-                if (outputSpeed && IOMap.in[v.filterId][v.outputObjIdx].beltItem) {
-                  // 输出已匹配速度
-                  IOMap.in[v.filterId][v.outputObjIdx].beltItem.parameters.count =
-                    IOMap.in[v.filterId][v.outputObjIdx].speed;
+                if(IOMap.in[v.filterId][v.outputObjIdx].beltItem){
+                  if (outputCountMode == 'speed') {
+                    // 输出已匹配速度
+                    IOMap.in[v.filterId][v.outputObjIdx].beltItem.parameters.count =
+                      IOMap.in[v.filterId][v.outputObjIdx].speed;
+                  } else if (outputCountMode == 'num') {
+                    // 输出已匹配数量
+                    IOMap.in[v.filterId][v.outputObjIdx].beltItem.parameters.count = linkNum[v.outputObjIdx];
+                  }
                 }
               }
               if (v.inputObjIdx != -1) {
@@ -917,10 +928,15 @@ export default {
                   linkNum[v.inputObjIdx]++;
                 }
 
-                if (outputSpeed && IOMap.out[v.filterId][v.inputObjIdx].beltItem) {
-                  // 输出已匹配速度
-                  IOMap.out[v.filterId][v.inputObjIdx].beltItem.parameters.count =
-                    -IOMap.out[v.filterId][v.inputObjIdx].speed;
+                if (IOMap.out[v.filterId][v.inputObjIdx].beltItem) {
+                  if (outputCountMode == 'speed') {
+                    // 输出已匹配速度
+                    IOMap.out[v.filterId][v.inputObjIdx].beltItem.parameters.count =
+                      -IOMap.out[v.filterId][v.inputObjIdx].speed;
+                  } else if (outputCountMode == 'num') {
+                    // 输出已匹配数量
+                    IOMap.out[v.filterId][v.inputObjIdx].beltItem.parameters.count = linkNum[v.inputObjIdx];
+                  }
                 }
               }
             }
@@ -954,9 +970,12 @@ export default {
                     indexMap[index].speed += Speed;
                     linkNum[index]++; // 节点链接数+1
 
-                    if (outputSpeed) {
+                    if (outputCountMode == 'speed') {
                       // 输出已匹配速度
                       indexMap[index].beltItem.parameters.count = indexMap[index].speed;
+                    } else if (outputCountMode == 'num') {
+                      // 输出已匹配数量
+                      indexMap[index].beltItem.parameters.count = linkNum[index];
                     }
 
                     this.NBM_successNum += 1;
@@ -986,9 +1005,12 @@ export default {
                     indexMap[index].speed += Speed;
                     linkNum[index]++; // 节点链接数+1
 
-                    if (outputSpeed) {
+                    if (outputCountMode == 'speed') {
                       // 输出已匹配速度
                       indexMap[index].beltItem.parameters.count = -indexMap[index].speed;
+                    } else if (outputCountMode == 'num') {
+                      // 输出已匹配数量
+                      indexMap[index].beltItem.parameters.count = linkNum[index];
                     }
 
                     this.NBM_successNum += 1;
@@ -1869,7 +1891,7 @@ export default {
               // 无带流
               this.formInline.resBlueprintData = this.noBeltMethod(
                 this.formInline.blueprintData,
-                this.formInline.params.outputSpeed
+                this.formInline.params.outputCountMode
               );
               break;
           }
