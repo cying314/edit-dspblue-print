@@ -97,7 +97,7 @@
                               <p>矩阵研究站：3</p>
                               <p>制造台：4</p>
                             </template>
-                            <span>垂直间隔：<i class="el-icon-question "></i></span>
+                            <span>垂直间隔<i class="el-icon-question "></i>：</span>
                           </el-tooltip>
                         </template>
                         <el-input type="number" v-model="formInline.params.spacing">
@@ -179,7 +179,7 @@
                               <template slot="content">
                                 <p>基于0相对偏移</p>
                               </template>
-                              <span>纵向偏移量：<i class="el-icon-question "></i></span>
+                              <span>纵向偏移量<i class="el-icon-question "></i>：</span>
                             </el-tooltip>
                           </template>
                           <el-input type="number" v-model="formInline.params.offsetY">
@@ -345,47 +345,69 @@
                         </el-tooltip>
                       </template>
                       <el-radio-group v-model="formInline.params.outputCountMode">
-                          <el-radio label="speed">最终匹配的分拣器速度</el-radio>
-                          <el-radio label="num">最终匹配的分拣器数量</el-radio>
-                          <el-radio label="none">原标记数</el-radio>
-                        </el-radio-group>
+                        <el-radio label="speed">最终匹配的分拣器速度</el-radio>
+                        <el-radio label="num">最终匹配的分拣器数量</el-radio>
+                        <el-radio label="none">原标记数</el-radio>
+                      </el-radio-group>
                     </el-form-item>
-                    <el-form-item label="1、供料：">
-                      <div>
-                        分拣器<b>过滤物品A</b> 且 输入端失效，匹配传送带<b>图标标签为A</b> 且 <b>标记数为负数</b>的传送带节点作为输入端
-                      </div>
+                    <el-form-item>
+                      <el-collapse>
+                        <el-collapse-item>
+                          <template slot="title">
+                            操作步骤<i class="header-icon el-icon-info"></i>
+                          </template>
+                          <div class="line">
+                            <b>步骤①、</b>拆掉分拣器下的传送带，让分拣器输入/输出端失效；
+                          </div>
+                          <div class="line">
+                            <b>步骤②、</b>给失效的分拣器设置过滤物品（假设物品为A）；
+                          </div>
+                          <div class="line">
+                            <b>步骤③、</b>给需要对接的传送带节点打上物品A的图标，并在图标下输入标记数（正数匹配输出端；负数匹配输入端）；
+                          </div>
+                          <div class="line">
+                            <b>步骤④、</b>将传送带节点和分拣器（连带着建筑）复制进蓝图工具，使用“无带流”一键输出即可。
+                          </div>
+                        </el-collapse-item>
+                        <el-collapse-item>
+                          <template slot="title">
+                            注意要点<i class="header-icon el-icon-info"></i>
+                          </template>
+                          <div class="line">
+                            <b>要点①、</b>传送带图标下的<b>标记数必须为正数或负数</b>，不匹配0。
+                          </div>
+                          <div class="line">
+                            <b>要点②、</b>标记数的<b>正负</b>用于控制传送带节点是<b>放入还是取出</b>。
+                          </div>
+                          <div class="line">
+                            <div>
+                              <b>要点③、</b>标记数的<b>数值</b>用于控制可接入的<b>分拣器总速度上限</b>。
+                            </div>
+                            <div>
+                              （分拣器速度计算长度影响，长度1格时速度为：蓝6/绿3/黄1.5，具体看游戏内分拣器属性）
+                            </div>
+                            <div>
+                              【如：“-30”可匹配5个蓝爪的输入端——从带上取走，“9”可匹配1个蓝爪+1个绿爪的输出端——往带上放置】
+                            </div>
+                          </div>
+                          <div class="line">
+                            <b>要点④、</b>一个传送带节点匹配满上限，才会匹配下一个符合条件的节点。（匹配顺序按建筑顺序）
+                          </div>
+                          <div class="line">
+                            <b>要点⑤、</b>导入时传送带上已有的分拣器链接也会计入总速度。
+                          </div>
+                          <div class="line" style="color: red">
+                            <b>要点⑥、</b>*一个传送带节点最多可链接8个分拣器（官方限制，输入端和输出端合计）
+                          </div>
+                          <div class="line" style="color: red">
+                            <b>要点⑦、</b>*蓝图每次复制后负数标记数会+1，因此粘贴进工具的蓝图会默认-1修正（官方BUG）
+                          </div>
+                        </el-collapse-item>
+                      </el-collapse>
                     </el-form-item>
-                    <el-form-item label="2、产出：">
-                      <div>
-                        分拣器<b>过滤物品A</b> 且 输出端失效，匹配传送带<b>图标标签为A</b> 且 <b>标记数为正数</b>的传送带节点作为输出端
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="3、标记数：">
-                      <div>
-                        传送带图标标签下的<b>标记数必须为正数或负数</b>，不匹配0。
-                      </div>
-                      <div>
-                        标记数的<b>正负</b>用于控制传送带节点是<b>放入还是取出</b>；<b>数值</b>用于控制可接入的<b>分拣器总速度上限</b>
-                      </div>
-                      <div>
-                        (分拣器速度受长度影响，长度1格时速度为：蓝6/绿3/黄1.5，具体看游戏内分拣器属性)
-                      </div>
-                      <div>
-                        如“-30”代表可接入5个蓝爪的输入端(拿走传送带上的物品)，“9”代表可接入1个蓝爪+1个绿爪的输出端(往传送带上的放置物品)
-                      </div>
-                      <div>
-                        一个传送带节点超出接入上限将匹配下一个符合条件的节点进行接入
-                      </div>
-                      <div>
-                        导入时传送带上已有的分拣器链接也会计入总速度
-                      </div>
-                      <div style="color: red">
-                        *一个传送带节点最多可链接8个分拣器
-                      </div>
-                      <div>
-                        <a href="https://www.bilibili.com/video/BV138411x7Sn" target="_blank">操作视频教程</a>
-                      </div>
-                    </el-form-item>
+                    <div style="text-align: center;line-height:50px">
+                      <el-button type="warning" round @click="openUrl('https://www.bilibili.com/video/BV138411x7Sn')">操作视频教程</el-button>
+                    </div>
                   </template>
                 </el-form>
               </div>
@@ -509,7 +531,7 @@ export default {
             Z: 0,
           },
           WinserterDir: "left",
-          outputCountMode: 'speed',
+          outputCountMode: "speed",
         },
         resBlueprintData: null,
         resType: "blueprint",
@@ -868,11 +890,11 @@ export default {
               }
               if (!linkNum[v.index]) linkNum[v.index] = 0;
 
-              if (outputCountMode == 'speed') {
+              if (outputCountMode == "speed") {
                 // 输出已匹配速度
                 IOMap[type][iconId][v.index].beltItem.parameters.count =
                   (type == "in" ? 1 : -1) * IOMap[type][iconId][v.index].speed;
-              } else if (outputCountMode == 'num') {
+              } else if (outputCountMode == "num") {
                 // 输出已匹配数量
                 IOMap[type][iconId][v.index].beltItem.parameters.count = linkNum[v.index];
               }
@@ -902,14 +924,15 @@ export default {
                   linkNum[v.outputObjIdx]++;
                 }
 
-                if(IOMap.in[v.filterId][v.outputObjIdx].beltItem){
-                  if (outputCountMode == 'speed') {
+                if (IOMap.in[v.filterId][v.outputObjIdx].beltItem) {
+                  if (outputCountMode == "speed") {
                     // 输出已匹配速度
                     IOMap.in[v.filterId][v.outputObjIdx].beltItem.parameters.count =
                       IOMap.in[v.filterId][v.outputObjIdx].speed;
-                  } else if (outputCountMode == 'num') {
+                  } else if (outputCountMode == "num") {
                     // 输出已匹配数量
-                    IOMap.in[v.filterId][v.outputObjIdx].beltItem.parameters.count = linkNum[v.outputObjIdx];
+                    IOMap.in[v.filterId][v.outputObjIdx].beltItem.parameters.count =
+                      linkNum[v.outputObjIdx];
                   }
                 }
               }
@@ -930,13 +953,14 @@ export default {
                 }
 
                 if (IOMap.out[v.filterId][v.inputObjIdx].beltItem) {
-                  if (outputCountMode == 'speed') {
+                  if (outputCountMode == "speed") {
                     // 输出已匹配速度
                     IOMap.out[v.filterId][v.inputObjIdx].beltItem.parameters.count =
                       -IOMap.out[v.filterId][v.inputObjIdx].speed;
-                  } else if (outputCountMode == 'num') {
+                  } else if (outputCountMode == "num") {
                     // 输出已匹配数量
-                    IOMap.out[v.filterId][v.inputObjIdx].beltItem.parameters.count = linkNum[v.inputObjIdx];
+                    IOMap.out[v.filterId][v.inputObjIdx].beltItem.parameters.count =
+                      linkNum[v.inputObjIdx];
                   }
                 }
               }
@@ -971,10 +995,10 @@ export default {
                     indexMap[index].speed += Speed;
                     linkNum[index]++; // 节点链接数+1
 
-                    if (outputCountMode == 'speed') {
+                    if (outputCountMode == "speed") {
                       // 输出已匹配速度
                       indexMap[index].beltItem.parameters.count = indexMap[index].speed;
-                    } else if (outputCountMode == 'num') {
+                    } else if (outputCountMode == "num") {
                       // 输出已匹配数量
                       indexMap[index].beltItem.parameters.count = linkNum[index];
                     }
@@ -1006,10 +1030,10 @@ export default {
                     indexMap[index].speed += Speed;
                     linkNum[index]++; // 节点链接数+1
 
-                    if (outputCountMode == 'speed') {
+                    if (outputCountMode == "speed") {
                       // 输出已匹配速度
                       indexMap[index].beltItem.parameters.count = -indexMap[index].speed;
-                    } else if (outputCountMode == 'num') {
+                    } else if (outputCountMode == "num") {
                       // 输出已匹配数量
                       indexMap[index].beltItem.parameters.count = linkNum[index];
                     }
@@ -2048,6 +2072,9 @@ export default {
         }
       }
     },
+    openUrl(url) {
+      window.open(url);
+    },
   },
 };
 </script>
@@ -2155,6 +2182,18 @@ export default {
           // min-width: 330px;
           /deep/.el-form-item__error {
             position: unset;
+          }
+          /deep/ .el-collapse-item__header {
+            font-size: 14px;
+            color: #606266;
+          }
+          /deep/ .el-collapse-item__content {
+            font-size: 14px;
+            text-indent: 2em;
+            color: #606266;
+            .line {
+              margin-top: 10px;
+            }
           }
           .flex {
             display: flex;
