@@ -348,22 +348,22 @@
                       <el-radio-group v-model="formInline.params.outputCountMode">
                         <el-radio label="none">
                           <el-tooltip class="item" effect="dark" placement="top">
-                              <template slot="content">
-                                <p>原来输入什么数就输出什么数</p>
-                              </template>
-                              <span>原标记数<i class="el-icon-question "></i></span>
-                            </el-tooltip>
+                            <template slot="content">
+                              <p>原来输入什么数就输出什么数</p>
+                            </template>
+                            <span>原标记数<i class="el-icon-question "></i></span>
+                          </el-tooltip>
                         </el-radio>
                         <el-radio label="speed">最终匹配的分拣器速度</el-radio>
                         <el-radio label="num">最终匹配的分拣器数量</el-radio>
                         <el-radio label="clear">
                           <el-tooltip class="item" effect="dark" placement="top">
-                              <template slot="content">
-                                <p>*只清除匹配上的传送带标记和分拣器过滤</p>
-                                <p>清除所有请到“清空标记”功能输出</p>
-                              </template>
-                              <span>清除标记<i class="el-icon-question "></i></span>
-                            </el-tooltip>
+                            <template slot="content">
+                              <p>*只清除匹配上的传送带标记和分拣器过滤</p>
+                              <p>清除所有请到“清空标记”功能输出</p>
+                            </template>
+                            <span>清除标记<i class="el-icon-question "></i></span>
+                          </el-tooltip>
                         </el-radio>
                       </el-radio-group>
                     </el-form-item>
@@ -439,7 +439,7 @@
                         <el-checkbox v-model="formInline.params.clearInserter">清空分拣器过滤</el-checkbox>
                       </el-form-item>
                     </div>
-                    
+
                   </template>
                 </el-form>
               </div>
@@ -844,7 +844,7 @@ export default {
     clearIcon(blueprintData, clearBelt, clearInserter) {
       // 清空标记
       let res = this.verticalOffset(blueprintData, 0); // 深拷贝，并处理悬空建筑
-      if(clearBelt || clearInserter){
+      if (clearBelt || clearInserter) {
         res.buildings.forEach((v) => {
           switch (v.itemId) {
             case 2001: // 传送带
@@ -922,7 +922,7 @@ export default {
           item3.label = `${item3.type}：${item3.num}`;
         }
       };
-      
+
       res.buildings.forEach((v) => {
         switch (v.itemId) {
           case 2001: // 传送带
@@ -944,7 +944,7 @@ export default {
                 linkNum: 0,
                 beltItem: v,
               };
-    
+
               if (outputCountMode == "speed") {
                 // 输出已匹配速度
                 v.parameters.count = beltMap[v.index].linkSpeed;
@@ -966,18 +966,18 @@ export default {
             break;
         }
       });
-      
+
       // 计算已链接在传送带上的分拣器数量和速度
       inserterList.forEach((v) => {
         var Speed = v.itemId == 2011 ? 1.5 : v.itemId == 2012 ? 3 : 6;
         Speed /= v.parameters.length || 1; // 计入分拣器长度
-        
+
         // 输出端不为空 且为 Map中的传送带
         if (v.outputObjIdx != -1 && beltMap[v.outputObjIdx]) {
           let beltObj = beltMap[v.outputObjIdx];
           beltObj.linkSpeed += Speed;
           beltObj.linkNum++;
-          
+
           if (outputCountMode == "speed") {
             // 输出已匹配速度
             beltObj.beltItem.parameters.count = beltObj.linkSpeed;
@@ -986,13 +986,13 @@ export default {
             beltObj.beltItem.parameters.count = beltObj.linkNum;
           }
         }
-        
+
         // 输入端不为空 且为 Map中的传送带
         if (v.inputObjIdx != -1 && beltMap[v.inputObjIdx]) {
           let beltObj = beltMap[v.inputObjIdx];
           beltObj.linkSpeed -= Speed;
           beltObj.linkNum++;
-          
+
           if (outputCountMode == "speed") {
             // 输出已匹配速度
             beltObj.beltItem.parameters.count = beltObj.linkSpeed;
@@ -1002,11 +1002,11 @@ export default {
           }
         }
       });
-      
+
       inserterList.forEach((v) => {
         var Speed = v.itemId == 2011 ? 1.5 : v.itemId == 2012 ? 3 : 6;
         Speed /= v.parameters.length || 1; // 计入分拣器长度
-        
+
         // 带过滤条件的失效 输出端
         if (v.filterId && v.outputObjIdx == -1) {
           // *同一传送带节点链接数不能超过8个
@@ -1042,41 +1042,41 @@ export default {
             addFail(v.filterId, v.itemId, "输出端");
           }
         }
-        
+
         // 带过滤条件的失效 输入端
         if (v.filterId && v.inputObjIdx == -1) {
-            // *同一传送带节点链接数不能超过8个
-            let index = Object.keys(beltMap).find(
-              (idx) =>
-                beltMap[idx].count < 0 &&
-                beltMap[idx].iconId == v.filterId &&
-                beltMap[idx].beltItem &&
-                beltMap[idx].linkSpeed - Speed >= beltMap[idx].count &&
-                beltMap[idx].linkNum < 8
-            );
-            if (index || index === 0) {
-              v.inputObjIdx = +index;
-              v.inputFromSlot = -1; // 传送带接口为-1
-              beltMap[index].linkSpeed -= Speed;
-              beltMap[index].linkNum++; // 节点链接数+1
+          // *同一传送带节点链接数不能超过8个
+          let index = Object.keys(beltMap).find(
+            (idx) =>
+              beltMap[idx].count < 0 &&
+              beltMap[idx].iconId == v.filterId &&
+              beltMap[idx].beltItem &&
+              beltMap[idx].linkSpeed - Speed >= beltMap[idx].count &&
+              beltMap[idx].linkNum < 8
+          );
+          if (index || index === 0) {
+            v.inputObjIdx = +index;
+            v.inputFromSlot = -1; // 传送带接口为-1
+            beltMap[index].linkSpeed -= Speed;
+            beltMap[index].linkNum++; // 节点链接数+1
 
-              if (outputCountMode == "speed") {
-                // 输出已匹配速度
-                beltMap[index].beltItem.parameters.count = beltMap[index].linkSpeed;
-              } else if (outputCountMode == "num") {
-                // 输出已匹配数量
-                beltMap[index].beltItem.parameters.count = beltMap[index].linkNum;
-              } else if (outputCountMode == "clear") {
-                // 清除标记
-                beltMap[index].beltItem.parameters.count = 0;
-                beltMap[index].beltItem.parameters.iconId = 0;
-                v.filterId = 0;
-              }
-
-              this.NBM_successNum += 1;
-            } else {
-              addFail(v.filterId, v.itemId, "输入端");
+            if (outputCountMode == "speed") {
+              // 输出已匹配速度
+              beltMap[index].beltItem.parameters.count = beltMap[index].linkSpeed;
+            } else if (outputCountMode == "num") {
+              // 输出已匹配数量
+              beltMap[index].beltItem.parameters.count = beltMap[index].linkNum;
+            } else if (outputCountMode == "clear") {
+              // 清除标记
+              beltMap[index].beltItem.parameters.count = 0;
+              beltMap[index].beltItem.parameters.iconId = 0;
+              v.filterId = 0;
             }
+
+            this.NBM_successNum += 1;
+          } else {
+            addFail(v.filterId, v.itemId, "输入端");
+          }
         }
       });
       console.log(beltMap, "beltMap");
