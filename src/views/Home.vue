@@ -75,6 +75,7 @@
                       <el-radio label="3">线性变换</el-radio>
                       <el-radio label="4">无中生有(无需导入)</el-radio>
                       <el-radio label="5">无带流</el-radio>
+                      <el-radio label="6">清空标记</el-radio>
                     </el-radio-group>
                   </el-form-item>
                   <template v-if="formInline.paramType=='0'">
@@ -338,15 +339,13 @@
                       <template slot="label">
                         <el-tooltip class="item" effect="dark" placement="top">
                           <template slot="content">
-                            <p>输出后更改传送带节点下的图标标记数</p>
+                            <p>输出后更改传送带图标下的标记数</p>
                             <p>*只会影响到带图标且标记数不为0的传送带节点</p>
                           </template>
                           <span>输出标记数<i class="el-icon-question "></i>：</span>
                         </el-tooltip>
                       </template>
                       <el-radio-group v-model="formInline.params.outputCountMode">
-                        <el-radio label="speed">最终匹配的分拣器速度</el-radio>
-                        <el-radio label="num">最终匹配的分拣器数量</el-radio>
                         <el-radio label="none">
                           <el-tooltip class="item" effect="dark" placement="top">
                               <template slot="content">
@@ -355,6 +354,8 @@
                               <span>原标记数<i class="el-icon-question "></i></span>
                             </el-tooltip>
                         </el-radio>
+                        <el-radio label="speed">最终匹配的分拣器速度</el-radio>
+                        <el-radio label="num">最终匹配的分拣器数量</el-radio>
                         <el-radio label="clear">
                           <el-tooltip class="item" effect="dark" placement="top">
                               <template slot="content">
@@ -429,6 +430,16 @@
                     <div style="text-align: center;line-height:50px">
                       <el-button type="warning" round @click="openUrl('https://www.bilibili.com/video/BV138411x7Sn')">操作视频教程</el-button>
                     </div>
+                  </template>
+                  <template v-if="formInline.paramType=='6'">
+                    <!-- 清空标记 -->
+                    <div class="flex">
+                      <el-form-item label="清空选项：">
+                        <el-checkbox v-model="formInline.params.clearBelt">清空传送带图标</el-checkbox>
+                        <el-checkbox v-model="formInline.params.clearInserter">清空分拣器过滤</el-checkbox>
+                      </el-form-item>
+                    </div>
+                    
                   </template>
                 </el-form>
               </div>
@@ -552,7 +563,9 @@ export default {
             Z: 0,
           },
           WinserterDir: "left",
-          outputCountMode: "speed",
+          outputCountMode: "none",
+          clearBelt: true,
+          clearInserter: true,
         },
         resBlueprintData: null,
         resType: "blueprint",
@@ -827,6 +840,32 @@ export default {
     },
     deepCopy(obj) {
       return JSON.parse(JSON.stringify(obj));
+    },
+    clearIcon(blueprintData, clearBelt, clearInserter) {
+      // 清空标记
+      let res = this.verticalOffset(blueprintData, 0); // 深拷贝，并处理悬空建筑
+      if(clearBelt || clearInserter){
+        res.buildings.forEach((v) => {
+          switch (v.itemId) {
+            case 2001: // 传送带
+            case 2002: // 高速传送带
+            case 2003: // 极速传送带
+              if (clearBelt && v.parameters?.iconId) {
+                v.parameters.iconId = 0;
+                v.parameters.count = 0;
+              }
+              break;
+            case 2011: // 分拣器
+            case 2012: // 高速分拣器
+            case 2013: // 极速分拣器
+              if (clearInserter && v.filterId) {
+                v.filterId = 0;
+              }
+              break;
+          }
+        });
+      }
+      return res;
     },
     noBeltMethod(blueprintData, outputCountMode) {
       // 无带流（根据标记匹配分拣器输入输出端）
@@ -1907,6 +1946,14 @@ export default {
               this.formInline.resBlueprintData = this.noBeltMethod(
                 this.formInline.blueprintData,
                 this.formInline.params.outputCountMode
+              );
+              break;
+            case "6":
+              // 清空图标
+              this.formInline.resBlueprintData = this.clearIcon(
+                this.formInline.blueprintData,
+                this.formInline.params.clearBelt,
+                this.formInline.params.clearInserter
               );
               break;
           }
