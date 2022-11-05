@@ -21,26 +21,28 @@
           <el-collapse style="padding-bottom: 20px">
             <el-card name="1">
               <div slot="header" class="card_header">
-                <span>导入蓝图</span>
-                <el-button size="small" type="primary" @click="render" v-if="formInline.inputData.trim()!=formInline.importData">确定</el-button>
+                <span class="title">导入蓝图</span>
+                <div class="btnWrap">
+                  <el-upload action="" :auto-upload="false" :limit="1" :file-list="fileList" :accept="formInline.dataType=='blueprint'?'.txt':formInline.dataType=='json'?'.txt,.json':'.txt,.json'" :on-change="uploadChange">
+                    <el-button plain size="small" slot="trigger" icon="el-icon-folder-opened">导入{{formInline.dataType=='blueprint'?'蓝图':formInline.dataType=='json'?'JSON':''}}文件</el-button>
+                  </el-upload>
+                  <el-button style="margin-left: 10px;" type="primary" plain size="small" @click="inputFromClipboard" icon="el-icon-document-copy">粘贴</el-button>
+                  <template v-if="formInline.inputData.trim() && formInline.inputData.trim()!=formInline.importData">
+                    <el-divider direction="vertical"></el-divider>
+                    <el-button size="small" type="primary" @click="render">确定导入</el-button>
+                  </template>
+                </div>
               </div>
               <div class="card_content">
                 <el-form :model="formInline" ref="importForm" @submit.native.prevent>
+                  <el-form-item>
+                    <el-radio-group v-model="formInline.dataType">
+                      <el-radio label="blueprint">导入蓝图</el-radio>
+                      <el-radio label="json">导入JSON</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
                   <el-form-item prop="inputData" :rules="rules.notNull">
-                    <div class="el-input el-input-group el-input-group--append el-input-group--prepend el-input--suffix">
-                      <div class="el-input-group__prepend">
-                        <el-select v-model="formInline.dataType" slot="prepend" placeholder="请选择" style="width:130px">
-                          <el-option label="导入原生蓝图" value="blueprint"></el-option>
-                          <el-option label="导入JSON" value="json"></el-option>
-                        </el-select>
-                      </div>
-                      <el-input type="textarea" rows="3" v-model="formInline.inputData" clearable></el-input>
-                      <div class="el-input-group__append">
-                        <el-upload action="" :auto-upload="false" :limit="1" :file-list="fileList" accept=".txt,.json" :on-change="uploadChange">
-                          <el-button slot="trigger" icon="el-icon-folder-opened">导入文件</el-button>
-                        </el-upload>
-                      </div>
-                    </div>
+                    <el-input type="textarea" v-model="formInline.inputData" :rows="5" ref="inputDataRef"></el-input>
                   </el-form-item>
                 </el-form>
                 <template v-if="formInline.blueprintData">
@@ -62,8 +64,10 @@
             </el-card>
             <el-card name="2">
               <div slot="header" class="card_header">
-                <span>生成配置</span>
-                <el-button size="small" type="primary" @click="output" v-if="formInline.blueprintData || formInline.paramType == '4'">输出</el-button>
+                <span class="title">生成配置</span>
+                <div class="btnWrap">
+                  <el-button size="small" type="primary" @click="output" v-if="formInline.blueprintData || formInline.paramType == '4'">输出</el-button>
+                </div>
               </div>
               <div class="card_content">
                 <el-form label-width="120px" :model="formInline" ref="paramForm" @submit.native.prevent :rules="rules">
@@ -446,8 +450,13 @@
             </el-card>
             <el-card name="3">
               <div slot="header" class="card_header">
-                <span>输出结果</span>
-                <el-button size="small" type="primary" @click="saveFile">保存文件</el-button>
+                <span class="title">输出结果</span>
+                <div class="btnWrap" v-if="formInline.resData.trim() || formInline.resJSON.trim()">
+                  <el-button plain size="small" @click="saveFile" icon="el-icon-folder-opened">导出{{formInline.resType=='blueprint'?'蓝图':formInline.resType=='json'?'JSON':''}}文件</el-button>
+                  <el-button type="primary" plain size="small" @click="outToClipboard" icon="el-icon-document-copy">复制</el-button>
+                  <el-divider direction="vertical"></el-divider>
+                  <el-button type="primary" size="small" @click="outToInput">将结果重新导入</el-button>
+                </div>
               </div>
               <div class="card_content">
                 <el-form :model="formInline" @submit.native.prevent>
@@ -458,11 +467,11 @@
                     </el-radio-group>
                   </el-form-item>
                   <el-form-item v-if="formInline.resType=='blueprint'">
-                    <el-input type="textarea" v-model="formInline.resData" :rows="5" readonly>
+                    <el-input type="textarea" v-model="formInline.resData" :rows="5" readonly ref="resDataRef">
                     </el-input>
                   </el-form-item>
                   <el-form-item v-if="formInline.resType=='json'">
-                    <el-input type="textarea" v-model="formInline.resJSON" :rows="5" readonly>
+                    <el-input type="textarea" v-model="formInline.resJSON" :rows="5" readonly ref="resJSONRef">
                     </el-input>
                   </el-form-item>
                 </el-form>
@@ -804,6 +813,98 @@ export default {
     });
   },
   methods: {
+    outToInput() {
+      if (this.formInline.resType == "blueprint") {
+        if (!this.formInline.resData){
+          this.warning("请先生成数据");
+          return;
+        }
+        this.$set(this.formInline, 'dataType', 'blueprint');
+        this.$set(this.formInline, 'inputData', this.formInline.resData);
+        this.render();
+      } else if (this.formInline.resType == "json") {
+        if (!this.formInline.resJSON){
+          this.warning("请先生成数据");
+          return;
+        }
+        this.$set(this.formInline, 'dataType', 'json');
+        this.$set(this.formInline, 'inputData', this.formInline.resJSON);
+        this.formInline.dataType = "json";
+        this.render();
+      }
+    },
+    async outToClipboard() {
+      const Clipboard = navigator?.clipboard;
+      let typeName;
+      let text;
+      let textRef;
+      if (this.formInline.resType == "blueprint") {
+        if (!this.formInline.resData){
+          return this.warning("请先生成数据");
+        }
+        typeName = '蓝图';
+        text = this.formInline.resData;
+        textRef = this.$refs?.resDataRef;
+      } else if (this.formInline.resType == "json") {
+        if (!this.formInline.resJSON){
+          return this.warning("请先生成数据");
+        }
+        typeName = 'JSON';
+        text = this.formInline.resJSON;
+        textRef = this.$refs?.resJSONRef;
+      }
+      if (!text || !textRef) {
+        return this.warning("数据错误，复制失败！");
+      }
+      textRef.select();
+
+      if(Clipboard) {
+        try {
+          await navigator.clipboard.writeText(text);
+          this.success(`已将${typeName}复制到剪贴板！`);
+        } catch(e){
+          console.log('未授权复制权限');
+          // 降级尝试使用execCommand复制
+          document.execCommand('copy');
+          this.success(`已将${typeName}复制到剪贴板！`);
+        }
+      } else {
+        console.log('浏览器不支持navigator.clipboard');
+        // 降级尝试使用execCommand复制
+        document.execCommand('copy');
+        this.success(`已将${typeName}复制到剪贴板！`);
+      }
+    },
+    async inputFromClipboard() {
+      const Clipboard = navigator?.clipboard;
+      if(Clipboard) {
+        try {
+          const text = await navigator.clipboard.readText();
+          this.$set(this.formInline, 'inputData', text);
+          this.success(`已将剪贴板内容粘贴到输入框！`);
+        } catch(e){
+          console.log('未授权粘贴权限');
+          this.inputFromClipboard_execCommand();
+        }
+      } else {
+        console.log('浏览器不支持navigator.clipboard');
+        this.inputFromClipboard_execCommand();
+      }
+    },
+    inputFromClipboard_execCommand() {
+      // 降级尝试使用execCommand粘贴
+      let inputDataRef = this.$refs?.inputDataRef;
+      if (!inputDataRef) {
+        return this.warning("数据错误，粘贴失败！");
+      }
+      inputDataRef.focus();
+      if(document.execCommand('paste')) {
+        this.success(`已将剪贴板内容粘贴到输入框！`);
+      } else {
+        // chrome 执行返回 false 因为读取剪切板涉及用户隐私安全，必须的用户允许的情况下可以进行访问
+        this.warning(`浏览器未授权读取剪贴板，粘贴失败！`);
+      }
+    },
     getIcon(item) {
       let icon = item?.icon;
       if (!icon) return null;
@@ -1956,7 +2057,11 @@ export default {
                 this.formInline.params.clearInserter
               );
               break;
+            default:
+              this.warning("错误的转换类型！");
+              return;
           }
+          this.success("输出成功！");
           console.log(this.formInline.resBlueprintData);
           this.$set(this.formInline, "resData", PARSER.toStr(this.formInline.resBlueprintData));
           this.$set(this.formInline, "resJSON", JSON.stringify(this.formInline.resBlueprintData));
@@ -1968,23 +2073,36 @@ export default {
         this.warning("请选择导出类型");
         return;
       }
-      if (this.formInline.resType == "blueprint" && !this.formInline.resData) {
-        this.warning("请先生成数据");
-        return;
+      let typeName;
+      let fileName;
+      let blob;
+      if (this.formInline.resType == "blueprint") {
+        if (!this.formInline.resData){
+          return this.warning("请先生成数据");
+        }
+        typeName = "蓝图";
+        fileName = this.formInline.resType + Date.now() + ".txt";
+        blob = new Blob(
+          [this.formInline.resData],
+          { type: "text/plain;charset=utf-8" }
+        );
       }
-      if (this.formInline.resType == "json" && !this.formInline.resJSON) {
-        this.warning("请先生成数据");
-        return;
+      if (this.formInline.resType == "json") {
+        if (!this.formInline.resJSON){
+          return this.warning("请先生成数据");
+        }
+        typeName = "JSON";
+        fileName = this.formInline.resType + Date.now() + ".json";
+        blob = new Blob(
+          [this.formInline.resJSON],
+          { type: "text/plain;charset=utf-8" }
+        );
       }
-      var blob = new Blob(
-        [
-          this.formInline.resType == "blueprint"
-            ? this.formInline.resData
-            : this.formInline.resJSON,
-        ],
-        { type: "text/plain;charset=utf-8" }
-      );
-      saveAs(blob, this.formInline.resType + Date.now() + ".txt");
+      if (!fileName || !blob) {
+        return this.warning(`数据错误，导出${typeName}文件失败！`);
+      }
+      saveAs(blob, fileName);
+      this.success(`导出${typeName}文件成功！`);
     },
     render() {
       this.$refs.importForm.validate((valid) => {
@@ -1999,30 +2117,40 @@ export default {
             try {
               blueprintData = PARSER.fromStr(inputData);
             } catch (e) {
-              this.warning("导入的数据有误");
+              this.warning("导入的蓝图数据有误");
               return;
             }
             console.log(blueprintData);
             this.$set(this.formInline, "importData", inputData);
             this.$set(this.formInline, "blueprintData", blueprintData);
+            this.success("导入蓝图成功！");
           } else if (this.formInline.dataType == "json") {
             try {
               blueprintData = JSON.parse(inputData);
               PARSER.toStr(blueprintData);
             } catch (e) {
-              this.warning("导入的数据有误");
+              this.warning("导入的JSON数据有误");
               return;
             }
             console.log(blueprintData);
             this.$set(this.formInline, "importData", inputData);
             this.$set(this.formInline, "blueprintData", blueprintData);
+            this.success("导入JSON成功！");
           }
         }
       });
     },
+    success(msg){
+      this.$message({
+        showClose: true,
+        message: msg,
+        type: "success",
+        duration: 1000,
+      });
+    },
     warning(msg) {
-      this.$notify({
-        title: "警告",
+      this.$message({
+        showClose: true,
         message: msg,
         type: "warning",
       });
@@ -2211,8 +2339,18 @@ export default {
           // min-width: 330px;
           .card_header {
             display: flex;
-            justify-content: space-between;
+            flex-wrap: wrap;
             align-items: center;
+            .title{
+              flex-shrink: 0;
+            }
+            .btnWrap{
+              margin-left: auto;
+              display: flex;
+              justify-content: flex-end;
+              flex-wrap: wrap;
+              align-items: center;
+            }
           }
         }
         .el-form {
