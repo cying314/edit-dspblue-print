@@ -11,7 +11,7 @@
               <span slot="title">联系作者</span>
             </el-menu-item>
             <el-menu-item index="-2">
-              <span slot="title">查看更新(当前版本：v4.2)</span>
+              <span slot="title">查看更新(当前版本：v4.3)</span>
             </el-menu-item>
           </el-menu>
         </el-scrollbar>
@@ -815,20 +815,20 @@ export default {
   methods: {
     outToInput() {
       if (this.formInline.resType == "blueprint") {
-        if (!this.formInline.resData){
+        if (!this.formInline.resData) {
           this.warning("请先生成数据");
           return;
         }
-        this.$set(this.formInline, 'dataType', 'blueprint');
-        this.$set(this.formInline, 'inputData', this.formInline.resData);
+        this.$set(this.formInline, "dataType", "blueprint");
+        this.$set(this.formInline, "inputData", this.formInline.resData);
         this.render();
       } else if (this.formInline.resType == "json") {
-        if (!this.formInline.resJSON){
+        if (!this.formInline.resJSON) {
           this.warning("请先生成数据");
           return;
         }
-        this.$set(this.formInline, 'dataType', 'json');
-        this.$set(this.formInline, 'inputData', this.formInline.resJSON);
+        this.$set(this.formInline, "dataType", "json");
+        this.$set(this.formInline, "inputData", this.formInline.resJSON);
         this.formInline.dataType = "json";
         this.render();
       }
@@ -839,17 +839,17 @@ export default {
       let text;
       let textRef;
       if (this.formInline.resType == "blueprint") {
-        if (!this.formInline.resData){
+        if (!this.formInline.resData) {
           return this.warning("请先生成数据");
         }
-        typeName = '蓝图';
+        typeName = "蓝图";
         text = this.formInline.resData;
         textRef = this.$refs?.resDataRef;
       } else if (this.formInline.resType == "json") {
-        if (!this.formInline.resJSON){
+        if (!this.formInline.resJSON) {
           return this.warning("请先生成数据");
         }
-        typeName = 'JSON';
+        typeName = "JSON";
         text = this.formInline.resJSON;
         textRef = this.$refs?.resJSONRef;
       }
@@ -858,51 +858,38 @@ export default {
       }
       textRef.select();
 
-      if(Clipboard) {
+      if (Clipboard) {
         try {
           await navigator.clipboard.writeText(text);
           this.success(`已将${typeName}复制到剪贴板！`);
-        } catch(e){
-          console.log('未授权复制权限');
+        } catch (e) {
+          console.log("未授权复制权限");
           // 降级尝试使用execCommand复制
-          document.execCommand('copy');
+          document.execCommand("copy");
           this.success(`已将${typeName}复制到剪贴板！`);
         }
       } else {
-        console.log('浏览器不支持navigator.clipboard');
+        console.log("浏览器不支持navigator.clipboard");
         // 降级尝试使用execCommand复制
-        document.execCommand('copy');
+        document.execCommand("copy");
         this.success(`已将${typeName}复制到剪贴板！`);
       }
     },
     async inputFromClipboard() {
       const Clipboard = navigator?.clipboard;
-      if(Clipboard) {
+      if (Clipboard) {
         try {
           const text = await navigator.clipboard.readText();
-          this.$set(this.formInline, 'inputData', text);
+          this.$set(this.formInline, "inputData", text);
           this.success(`已将剪贴板内容粘贴到输入框！`);
-        } catch(e){
-          console.log('未授权粘贴权限');
-          this.inputFromClipboard_execCommand();
+          setTimeout(() => {
+            this.render();
+          }, 0);
+        } catch (e) {
+          this.warning(`浏览器未授权读取剪贴板，粘贴失败！`);
         }
       } else {
-        console.log('浏览器不支持navigator.clipboard');
-        this.inputFromClipboard_execCommand();
-      }
-    },
-    inputFromClipboard_execCommand() {
-      // 降级尝试使用execCommand粘贴
-      let inputDataRef = this.$refs?.inputDataRef;
-      if (!inputDataRef) {
-        return this.warning("数据错误，粘贴失败！");
-      }
-      inputDataRef.focus();
-      if(document.execCommand('paste')) {
-        this.success(`已将剪贴板内容粘贴到输入框！`);
-      } else {
-        // chrome 执行返回 false 因为读取剪切板涉及用户隐私安全，必须的用户允许的情况下可以进行访问
-        this.warning(`浏览器未授权读取剪贴板，粘贴失败！`);
+        this.warning(`浏览器不支持剪贴板，粘贴失败！`);
       }
     },
     getIcon(item) {
@@ -2077,26 +2064,20 @@ export default {
       let fileName;
       let blob;
       if (this.formInline.resType == "blueprint") {
-        if (!this.formInline.resData){
+        if (!this.formInline.resData) {
           return this.warning("请先生成数据");
         }
         typeName = "蓝图";
         fileName = this.formInline.resType + Date.now() + ".txt";
-        blob = new Blob(
-          [this.formInline.resData],
-          { type: "text/plain;charset=utf-8" }
-        );
+        blob = new Blob([this.formInline.resData], { type: "text/plain;charset=utf-8" });
       }
       if (this.formInline.resType == "json") {
-        if (!this.formInline.resJSON){
+        if (!this.formInline.resJSON) {
           return this.warning("请先生成数据");
         }
         typeName = "JSON";
         fileName = this.formInline.resType + Date.now() + ".json";
-        blob = new Blob(
-          [this.formInline.resJSON],
-          { type: "text/plain;charset=utf-8" }
-        );
+        blob = new Blob([this.formInline.resJSON], { type: "text/plain;charset=utf-8" });
       }
       if (!fileName || !blob) {
         return this.warning(`数据错误，导出${typeName}文件失败！`);
@@ -2140,7 +2121,7 @@ export default {
         }
       });
     },
-    success(msg){
+    success(msg) {
       this.$message({
         showClose: true,
         message: msg,
@@ -2341,10 +2322,10 @@ export default {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            .title{
+            .title {
               flex-shrink: 0;
             }
-            .btnWrap{
+            .btnWrap {
               margin-left: auto;
               display: flex;
               justify-content: flex-end;
