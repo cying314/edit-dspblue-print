@@ -11,7 +11,7 @@
               <span slot="title">联系作者</span>
             </el-menu-item>
             <el-menu-item index="-2">
-              <span slot="title">查看更新(当前版本：v4.3)</span>
+              <span slot="title">查看更新(当前版本：v4.4)</span>
             </el-menu-item>
           </el-menu>
         </el-scrollbar>
@@ -23,8 +23,11 @@
               <div slot="header" class="card_header">
                 <span class="title">导入蓝图</span>
                 <div class="btnWrap">
-                  <el-upload action="" :auto-upload="false" :limit="1" :file-list="fileList" :accept="formInline.dataType=='blueprint'?'.txt':formInline.dataType=='json'?'.txt,.json':'.txt,.json'" :on-change="uploadChange">
-                    <el-button plain size="small" slot="trigger" icon="el-icon-folder-opened">导入{{formInline.dataType=='blueprint'?'蓝图':formInline.dataType=='json'?'JSON':''}}文件</el-button>
+                  <el-upload action="" :auto-upload="false" multiple :file-list="fileList" :accept="formInline.dataType=='blueprint'?'.txt':formInline.dataType=='json'?'.txt,.json':'.txt,.json'" :on-change="uploadChange_batchConvert">
+                    <el-button plain size="small" slot="trigger" icon="el-icon-sort">批量转换{{formInline.dataType=='blueprint'?'蓝图':formInline.dataType=='json'?'JSON':''}}文件</el-button>
+                  </el-upload>
+                  <el-upload action="" :auto-upload="false" :file-list="fileList" :accept="formInline.dataType=='blueprint'?'.txt':formInline.dataType=='json'?'.txt,.json':'.txt,.json'" :on-change="uploadChange_import">
+                    <el-button style="margin-left: 10px;" plain size="small" slot="trigger" icon="el-icon-folder-opened">导入{{formInline.dataType=='blueprint'?'蓝图':formInline.dataType=='json'?'JSON':''}}文件</el-button>
                   </el-upload>
                   <el-button style="margin-left: 10px;" type="primary" plain size="small" @click="inputFromClipboard" icon="el-icon-document-copy">粘贴</el-button>
                   <template v-if="formInline.inputData.trim() && formInline.inputData.trim()!=formInline.importData">
@@ -2060,30 +2063,29 @@ export default {
         this.warning("请选择导出类型");
         return;
       }
-      let typeName;
-      let fileName;
-      let blob;
       if (this.formInline.resType == "blueprint") {
         if (!this.formInline.resData) {
           return this.warning("请先生成数据");
         }
-        typeName = "蓝图";
-        fileName = this.formInline.resType + Date.now() + ".txt";
-        blob = new Blob([this.formInline.resData], { type: "text/plain;charset=utf-8" });
-      }
-      if (this.formInline.resType == "json") {
+        this.toTxt(this.formInline.resData, this.formInline.resType + Date.now() + ".txt");
+        this.success("导出蓝图文件成功！");
+      } else if (this.formInline.resType == "json") {
         if (!this.formInline.resJSON) {
           return this.warning("请先生成数据");
         }
-        typeName = "JSON";
-        fileName = this.formInline.resType + Date.now() + ".json";
-        blob = new Blob([this.formInline.resJSON], { type: "text/plain;charset=utf-8" });
+        this.toTxt(this.formInline.resJSON, this.formInline.resType + Date.now() + ".json");
+        this.success("导出JSON文件成功！");
+      } else {
+        return this.warning(`数据错误，导出文件失败！`);
       }
-      if (!fileName || !blob) {
-        return this.warning(`数据错误，导出${typeName}文件失败！`);
-      }
-      saveAs(blob, fileName);
-      this.success(`导出${typeName}文件成功！`);
+    },
+    toTxt(str, fileName) {
+      try {
+        saveAs(new Blob([str], { type: "text/plain;charset=utf-8" }), fileName);
+      } catch {
+        this.error("导出文件失败！");
+        throw "导出文件失败！";
+      }      
     },
     render() {
       this.$refs.importForm.validate((valid) => {
@@ -2136,7 +2138,56 @@ export default {
         type: "warning",
       });
     },
-    uploadChange(file) {
+    error(msg) {
+      this.$message({
+        showClose: true,
+        message: msg,
+        type: "error",
+      });
+    },
+    uploadChange_batchConvert(file, fileList){
+      let len = fileList.length;
+      let fullFileName = file.name;
+      let dotIdx = fullFileName.lastIndexOf(".");
+      let fileName = fullFileName;
+      if(dotIdx != -1) {
+        fileName = fullFileName.slice(0, dotIdx);
+      }
+      this.uploadChange(file, (e) => {
+        let inputData = e.target.result.trim();
+        let blueprintData;
+        if (this.formInline.dataType == "blueprint") {
+          let resJSON;
+          try {
+            blueprintData = PARSER.fromStr(inputData);
+            resJSON = JSON.stringify(blueprintData);
+          } catch (e) {
+            this.warning(`导入的蓝图数据有误[${fullFileName}](${len})...`);
+            return;
+          }
+          this.toTxt(resJSON, `${fileName}_to_json.json`);
+          this.success(`转换JSON成功[${fullFileName}](${len})...`);
+        } else if (this.formInline.dataType == "json") {
+          let resData;
+          try {
+            blueprintData = JSON.parse(inputData);
+            resData = PARSER.toStr(blueprintData);
+          } catch (e) {
+            this.warning(`导入的JSON数据有误[${fullFileName}](${len})...`);
+            return;
+          }
+          this.toTxt(resData, `${fileName}_to_blueprint.txt`);
+          this.success(`转换蓝图成功[${fullFileName}](${len})...`);
+        }
+      });
+    },
+    uploadChange_import(file) {
+      this.uploadChange(file, (e) => {
+        this.$set(this.formInline, "inputData", e.target.result);
+        this.render();
+      });
+    },
+    uploadChange(file, onLoadCallback){
       this.fileList = [];
       console.log(file, "file");
       if (["application/json", "text/plain"].indexOf(file.raw.type) == -1) {
@@ -2149,10 +2200,7 @@ export default {
       }
       let reader = new FileReader();
       reader.readAsText(file.raw, "UTF-8");
-      reader.onload = (e) => {
-        this.$set(this.formInline, "inputData", e.target.result);
-        this.render();
-      };
+      reader.onload = onLoadCallback;
     },
     onScroll(e) {
       let scrollItems = document.querySelectorAll(".el-card__header");
