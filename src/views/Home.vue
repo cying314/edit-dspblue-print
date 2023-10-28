@@ -11,7 +11,7 @@
               <span slot="title">联系作者</span>
             </el-menu-item>
             <el-menu-item index="-2">
-              <span slot="title">查看更新(当前版本：v4.4)</span>
+              <span slot="title">查看更新(当前版本：v4.5)</span>
             </el-menu-item>
           </el-menu>
         </el-scrollbar>
@@ -81,7 +81,16 @@
                       <el-radio label="2">水平翻转</el-radio>
                       <el-radio label="3">线性变换</el-radio>
                       <el-radio label="4">无中生有(无需导入)</el-radio>
-                      <el-radio label="5">无带流</el-radio>
+                      <el-radio label="5">
+                        无带流
+                        <el-tooltip class="item" effect="dark" placement="top">
+                          <template slot="content">
+                            <p>p.s.无带流在2023/01/05的更新中被官方修复了，修复后之前的无带建筑不影响使用，但是无法再用蓝图直接粘贴无带</p>
+                            <p>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可修复失效端</p>
+                          </template>
+                          <span><i class="el-icon-question "></i></span>
+                        </el-tooltip>
+                      </el-radio>
                       <el-radio label="6">清空标记</el-radio>
                     </el-radio-group>
                   </el-form-item>
@@ -278,6 +287,9 @@
                               <template slot="content">
                                 <p>可实现超远距离无带传输的分拣器</p>
                                 <p>生成的传送带两端将会有随机编码对应，可直接用传送带连接端点使用</p>
+                                <br />
+                                <p>p.s.无带流在2023/01/05的更新中被官方修复了，修复后之前的无带建筑不影响使用，但是无法再用蓝图直接粘贴无带</p>
+                                <p>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可修复失效端</p>
                               </template>
                               <span>虫洞分拣器<i class="el-icon-question "></i></span>
                             </el-tooltip>
@@ -1431,6 +1443,24 @@ export default {
             y: { 0: 2, 2: 0 },
           },
         },
+        {
+          itemId: 2103, // 行星内物流运输站
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
+          },
+        },
+        {
+          itemId: 2104, // 星际物流运输站
+          indexs: [],
+          axis: "x",
+          alterSlot: {
+            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
+          },
+        },
       ];
       // 分拣器接口建筑
       let inserterSlotBuilds = [
@@ -1590,57 +1620,55 @@ export default {
       ];
       if (zoomX * zoomY < 0) {
         res.buildings.forEach((v) => {
-          beltSlotBuilds.forEach((build) => {
+          for (let build of beltSlotBuilds) {
             if (
               build.itemId == v.itemId &&
               (!build.modelIndex || build.modelIndex == v.modelIndex)
             ) {
-              if (overturnX) {
+              // 存在翻转时（水平垂直都翻转等于没翻转）
+              if (overturnX ^ overturnY) {
+                // y轴对称模型旋转180度
                 if (build.axis == "y") {
                   v.yaw[0] -= 180;
                   v.yaw[1] -= 180;
                 }
-              }
-              if (overturnY) {
-                if (build.axis == "y") {
-                  v.yaw[0] -= 180;
-                  v.yaw[1] -= 180;
+                // 翻转时调换对称插槽
+                let _slots;
+                if (v.itemId == 2020 && v.parameters.priority) {
+                  // 四向过滤插槽翻转
+                  _slots = v.parameters.priority;
                 }
-              }
-              // 四向过滤接口单独处理翻转 1->3 0->2
-              if (v.itemId == 2020 && v.parameters.priority) {
-                const orginPriority = this.deepCopy(v.parameters.priority);
-                v.parameters.priority.forEach((b, i) => {
-                  if (overturnX) {
-                    const targetIndex = build.alterSlot[build.axis][i];
-                    if (targetIndex != null) v.parameters.priority[i] = orginPriority[targetIndex];
+                if ((v.itemId == 2103 || v.itemId == 2104) && v.parameters.slots) {
+                  // 物流塔传送带插槽翻转
+                  _slots = v.parameters.slots;
+                }
+                if (_slots) {
+                  let idxs = new Set(); // 已调换的插槽
+                  for (let oriIdx of Object.keys(build.alterSlot[build.axis])) {
+                    oriIdx = +oriIdx;
+                    if (idxs.has(oriIdx)) continue;
+                    let tarIdx = build.alterSlot[build.axis][oriIdx];
+                    [_slots[oriIdx], _slots[tarIdx]] = [_slots[tarIdx], _slots[oriIdx]];
+                    idxs.add(oriIdx);
+                    idxs.add(tarIdx);
                   }
-                  if (overturnY) {
-                    const targetIndex = build.alterSlot[build.axis][i];
-                    if (targetIndex != null) v.parameters.priority[i] = orginPriority[targetIndex];
-                  }
-                });
+                }
               }
               build.indexs.push(v.index);
+              break;
             }
-          });
-          inserterSlotBuilds.forEach((build) => {
+          }
+          for (let build of inserterSlotBuilds) {
             if (build.itemId == v.itemId) {
-              if (overturnX) {
-                if (build.axis == "y") {
-                  v.yaw[0] -= 180;
-                  v.yaw[1] -= 180;
-                }
-              }
-              if (overturnY) {
-                if (build.axis == "y") {
-                  v.yaw[0] -= 180;
-                  v.yaw[1] -= 180;
-                }
+              // 存在翻转时，y轴对称模型旋转180度
+              if (overturnX ^ overturnY && build.axis == "y") {
+                v.yaw[0] -= 180;
+                v.yaw[1] -= 180;
               }
               build.indexs.push(v.index);
+              break;
             }
-          });
+          }
         });
       }
 
@@ -1689,62 +1717,38 @@ export default {
             case 2001: // 传送带
             case 2002: // 高速传送带
             case 2003: // 极速传送带
-              beltSlotBuilds.forEach((build) => {
-                build.indexs.forEach((index) => {
-                  if (v.inputObjIdx == index) {
-                    const orginInputFromSlot = v.inputFromSlot;
-                    if (overturnX) {
-                      const inputSlot = build.alterSlot[build.axis][+orginInputFromSlot];
+              if (overturnX ^ overturnY) {
+                beltSlotBuilds.forEach((build) => {
+                  build.indexs.forEach((index) => {
+                    if (v.inputObjIdx == index) {
+                      const inputSlot = build.alterSlot[build.axis][+v.inputFromSlot];
                       if (inputSlot != null) v.inputFromSlot = inputSlot;
                     }
-                    if (overturnY) {
-                      const inputSlot = build.alterSlot[build.axis][+orginInputFromSlot];
-                      if (inputSlot != null) v.inputFromSlot = inputSlot;
-                    }
-                  }
-                  if (v.outputObjIdx == index) {
-                    const orginOutputToSlot = v.outputToSlot;
-                    if (overturnX) {
-                      const outputSlot = build.alterSlot[build.axis][+orginOutputToSlot];
+                    if (v.outputObjIdx == index) {
+                      const outputSlot = build.alterSlot[build.axis][+v.outputToSlot];
                       if (outputSlot != null) v.outputToSlot = outputSlot;
                     }
-                    if (overturnY) {
-                      const outputSlot = build.alterSlot[build.axis][+orginOutputToSlot];
-                      if (outputSlot != null) v.outputToSlot = outputSlot;
-                    }
-                  }
+                  });
                 });
-              });
+              }
               break;
             case 2011: // 分拣器
             case 2012: // 高速分拣器
             case 2013: // 极速分拣器
-              inserterSlotBuilds.forEach((build) => {
-                build.indexs.forEach((index) => {
-                  if (v.inputObjIdx == index) {
-                    const orginInputFromSlot = v.inputFromSlot;
-                    if (overturnX) {
-                      const inputSlot = build.alterSlot[build.axis][+orginInputFromSlot];
+              if (overturnX ^ overturnY) {
+                inserterSlotBuilds.forEach((build) => {
+                  build.indexs.forEach((index) => {
+                    if (v.inputObjIdx == index) {
+                      const inputSlot = build.alterSlot[build.axis][+v.inputFromSlot];
                       if (inputSlot != null) v.inputFromSlot = inputSlot;
                     }
-                    if (overturnY) {
-                      const inputSlot = build.alterSlot[build.axis][+orginInputFromSlot];
-                      if (inputSlot != null) v.inputFromSlot = inputSlot;
-                    }
-                  }
-                  if (v.outputObjIdx == index) {
-                    const orginOutputToSlot = v.outputToSlot;
-                    if (overturnX) {
-                      const outputSlot = build.alterSlot[build.axis][+orginOutputToSlot];
+                    if (v.outputObjIdx == index) {
+                      const outputSlot = build.alterSlot[build.axis][+v.outputToSlot];
                       if (outputSlot != null) v.outputToSlot = outputSlot;
                     }
-                    if (overturnY) {
-                      const outputSlot = build.alterSlot[build.axis][+orginOutputToSlot];
-                      if (outputSlot != null) v.outputToSlot = outputSlot;
-                    }
-                  }
+                  });
                 });
-              });
+              }
               break;
           }
         }
@@ -2085,7 +2089,7 @@ export default {
       } catch {
         this.error("导出文件失败！");
         throw "导出文件失败！";
-      }      
+      }
     },
     render() {
       this.$refs.importForm.validate((valid) => {
@@ -2145,12 +2149,12 @@ export default {
         type: "error",
       });
     },
-    uploadChange_batchConvert(file, fileList){
+    uploadChange_batchConvert(file, fileList) {
       let len = fileList.length;
       let fullFileName = file.name;
       let dotIdx = fullFileName.lastIndexOf(".");
       let fileName = fullFileName;
-      if(dotIdx != -1) {
+      if (dotIdx != -1) {
         fileName = fullFileName.slice(0, dotIdx);
       }
       this.uploadChange(file, (e) => {
@@ -2187,7 +2191,7 @@ export default {
         this.render();
       });
     },
-    uploadChange(file, onLoadCallback){
+    uploadChange(file, onLoadCallback) {
       this.fileList = [];
       console.log(file, "file");
       if (["application/json", "text/plain"].indexOf(file.raw.type) == -1) {
