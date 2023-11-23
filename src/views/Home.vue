@@ -1418,48 +1418,33 @@ export default {
           modelIndex: 38, // 十字单层
           indexs: [],
           axis: "x", // 模型yaw=0时对称方向(对称轴的垂直方向)
-          alterSlot: {
-            x: { 1: 3, 3: 1 },
-            y: { 0: 2, 2: 0 },
-          },
+          alterSlot: { 1: 3, 3: 1 }, // 需调换的接口索引
         },
         {
           itemId: 2020, // 四向分流器
           modelIndex: 39, // 一字双层
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: {},
-            y: { 0: 2, 1: 3, 2: 0, 3: 1 },
-          },
+          alterSlot: {},
         },
         {
           itemId: 2020, // 四向分流器
           modelIndex: 40, // 十字双层
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 1: 3, 3: 1 },
-            y: { 0: 2, 2: 0 },
-          },
+          alterSlot: { 1: 3, 3: 1 },
         },
         {
           itemId: 2103, // 行星内物流运输站
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
-          },
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
         },
         {
           itemId: 2104, // 星际物流运输站
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
-          },
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
         },
       ];
       // 分拣器接口建筑
@@ -1468,154 +1453,103 @@ export default {
           itemId: 2101, // 小型储物仓
           indexs: [],
           axis: "x", // 模型yaw=0时对称方向(对称轴的垂直方向)
-          alterSlot: {
-            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
-          },
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },  // 需调换的接口索引
         },
         {
           itemId: 2102, // 大型储物仓
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
-          },
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
         },
         {
           itemId: 2204, // 火力发电厂
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 4, 1: 3, 3: 1, 4: 0 }, // 2不对称
-            y: { 0: 1, 1: 0, 3: 4, 4: 3 }, // 2不对称
-          },
+          alterSlot: { 0: 4, 1: 3, 3: 1, 4: 0 }, // 2不对称
         },
         {
           itemId: 2211, // 微型聚变发电站
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 4, 1: 3, 3: 1, 4: 0 }, // 2不对称
-            y: { 0: 1, 1: 0, 3: 4, 4: 3 }, // 2不对称
-          },
+          alterSlot: { 0: 4, 1: 3, 3: 1, 4: 0 }, // 2不对称
         },
         {
           itemId: 2302, // 电弧熔炉
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
-          },
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
         },
         {
           itemId: 2315, // 位面熔炉
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
-          },
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
         },
         {
           itemId: 2303, // 制造台 Mk.I
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
-          },
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
         },
         {
           itemId: 2304, // 制造台 Mk.II
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
-          },
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
         },
         {
           itemId: 2305, // 制造台 Mk.III
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
-          },
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
         },
         {
           itemId: 2308, // 原油精炼厂
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 5, 1: 4, 2: 3, 3: 2, 4: 1, 5: 0, 6: 8, 8: 6 },
-            y: { 0: 5, 1: 4, 2: 3, 3: 2, 4: 1, 5: 0, 6: 8, 8: 6 },
-          },
+          alterSlot: { 0: 5, 1: 4, 2: 3, 3: 2, 4: 1, 5: 0, 6: 8, 8: 6 },
         },
         {
           itemId: 2309, // 化工厂
           indexs: [],
           axis: "y",
-          alterSlot: {
-            x: { 0: 7, 1: 2, 2: 1, 3: 6, 4: 5, 5: 4, 6: 3, 7: 0 },
-            y: { 0: 6, 1: 5, 2: 4, 3: 7, 4: 2, 5: 1, 6: 0, 7: 3 },
-          },
+          alterSlot: { 0: 6, 1: 5, 2: 4, 3: 7, 4: 2, 5: 1, 6: 0, 7: 3 },
         },
         {
           itemId: 2317, // 量子化工厂
           indexs: [],
           axis: "y",
-          alterSlot: {
-            x: { 0: 7, 1: 2, 2: 1, 3: 6, 4: 5, 5: 4, 6: 3, 7: 0 },
-            y: { 0: 6, 1: 5, 2: 4, 3: 7, 4: 2, 5: 1, 6: 0, 7: 3 },
-          },
+          alterSlot: { 0: 6, 1: 5, 2: 4, 3: 7, 4: 2, 5: 1, 6: 0, 7: 3 },
         },
         {
           itemId: 2310, // 微型粒子对撞机
           indexs: [],
           axis: "y",
-          alterSlot: {
-            x: {}, // 不对称
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0 },
-          },
+          alterSlot: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0 },
         },
         {
           itemId: 2311, // 电磁轨道弹射器
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 1, 1: 0 },
-            y: { 2: 3, 3: 2 },
-          },
+          alterSlot: { 0: 1, 1: 0 },
         },
         {
           itemId: 2210, // 人造恒星
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 1: 3, 3: 1 },
-            y: { 1: 2, 2: 1 },
-          },
+          alterSlot: { 1: 3, 3: 1 },
         },
         {
           itemId: 2312, // 垂直发射井
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 1: 2, 2: 1 },
-            y: {}, // 不对称
-          },
+          alterSlot: { 1: 2, 2: 1 },
         },
         {
           itemId: 2901, // 矩阵研究站
           indexs: [],
           axis: "x",
-          alterSlot: {
-            x: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-            y: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0, 9: 11, 11: 9 },
-          },
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
         },
       ];
       if (zoomX * zoomY < 0) {
@@ -1644,10 +1578,10 @@ export default {
                 }
                 if (_slots) {
                   let idxs = new Set(); // 已调换的插槽
-                  for (let oriIdx of Object.keys(build.alterSlot[build.axis])) {
+                  for (let oriIdx of Object.keys(build.alterSlot)) {
                     oriIdx = +oriIdx;
                     if (idxs.has(oriIdx)) continue;
-                    let tarIdx = build.alterSlot[build.axis][oriIdx];
+                    let tarIdx = build.alterSlot[oriIdx];
                     [_slots[oriIdx], _slots[tarIdx]] = [_slots[tarIdx], _slots[oriIdx]];
                     idxs.add(oriIdx);
                     idxs.add(tarIdx);
@@ -1721,11 +1655,11 @@ export default {
                 beltSlotBuilds.forEach((build) => {
                   build.indexs.forEach((index) => {
                     if (v.inputObjIdx == index) {
-                      const inputSlot = build.alterSlot[build.axis][+v.inputFromSlot];
+                      const inputSlot = build.alterSlot[+v.inputFromSlot];
                       if (inputSlot != null) v.inputFromSlot = inputSlot;
                     }
                     if (v.outputObjIdx == index) {
-                      const outputSlot = build.alterSlot[build.axis][+v.outputToSlot];
+                      const outputSlot = build.alterSlot[+v.outputToSlot];
                       if (outputSlot != null) v.outputToSlot = outputSlot;
                     }
                   });
@@ -1739,11 +1673,11 @@ export default {
                 inserterSlotBuilds.forEach((build) => {
                   build.indexs.forEach((index) => {
                     if (v.inputObjIdx == index) {
-                      const inputSlot = build.alterSlot[build.axis][+v.inputFromSlot];
+                      const inputSlot = build.alterSlot[+v.inputFromSlot];
                       if (inputSlot != null) v.inputFromSlot = inputSlot;
                     }
                     if (v.outputObjIdx == index) {
-                      const outputSlot = build.alterSlot[build.axis][+v.outputToSlot];
+                      const outputSlot = build.alterSlot[+v.outputToSlot];
                       if (outputSlot != null) v.outputToSlot = outputSlot;
                     }
                   });
