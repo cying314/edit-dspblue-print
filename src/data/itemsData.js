@@ -121,6 +121,7 @@ export const items = [
     { id: 2104, models: [50], name: '星际物流运输站', icon: 'interstellar-logistic-station', grid: [2, 2, 11] },
     { id: 2105, models: [117], name: '轨道采集器', icon: 'orbital-collector', grid: [2, 2, 12] },
     { id: 2901, models: [70], name: '矩阵研究站', icon: 'lab', grid: [2, 4, 6] },
+    { id: 2902, models: [70], name: '自演化研究站', icon: 'lab', grid: [2, 4, 6] },
     { id: 6001, models: [], name: '电磁矩阵', icon: 't-matrix', grid: [1, 7, 1] },
     { id: 6002, models: [], name: '能量矩阵', icon: 'e-matrix', grid: [1, 7, 2] },
     { id: 6003, models: [], name: '结构矩阵', icon: 'c-matrix', grid: [1, 7, 3] },

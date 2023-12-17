@@ -536,8 +536,9 @@
 </template>
 
 <script>
-import * as PARSER from "../utils/parser";
-import { items as itemsData } from "../data/itemsData";
+import * as PARSER from "@/utils/parser";
+import { items as itemsData } from "@/data/itemsData";
+import * as itemsUtil from "@/utils/itemsUtil";
 import { saveAs } from "file-saver";
 export default {
   name: "Home",
@@ -941,30 +942,37 @@ export default {
         return this.findUppermost(buildings, itemId, item.index);
       }
     },
+    // deepCopy(obj) {
+    //   return JSON.parse(JSON.stringify(obj));
+    // },
     deepCopy(obj) {
-      return JSON.parse(JSON.stringify(obj));
+      if (obj === null || typeof obj !== "object") {
+        return obj;
+      }
+      var clone = Array.isArray(obj) ? [] : {};
+      for (var key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          clone[key] = this.deepCopy(obj[key]);
+        }
+      }
+      return clone;
     },
     clearIcon(blueprintData, clearBelt, clearInserter) {
       // 清空标记
       let res = this.verticalOffset(blueprintData, 0); // 深拷贝，并处理悬空建筑
       if (clearBelt || clearInserter) {
         res.buildings.forEach((v) => {
-          switch (v.itemId) {
-            case 2001: // 传送带
-            case 2002: // 高速传送带
-            case 2003: // 极速传送带
-              if (clearBelt && v.parameters?.iconId) {
-                v.parameters.iconId = 0;
-                v.parameters.count = 0;
-              }
-              break;
-            case 2011: // 分拣器
-            case 2012: // 高速分拣器
-            case 2013: // 极速分拣器
-              if (clearInserter && v.filterId) {
-                v.filterId = 0;
-              }
-              break;
+          if (itemsUtil.isBelt(v.itemId)) {
+            // 传送带
+            if (clearBelt && v.parameters?.iconId) {
+              v.parameters.iconId = 0;
+              v.parameters.count = 0;
+            }
+          } else if (itemsUtil.isInserter(v.itemId)) {
+            // 分拣器
+            if (clearInserter && v.filterId) {
+              v.filterId = 0;
+            }
           }
         });
       }
@@ -1027,46 +1035,41 @@ export default {
       };
 
       res.buildings.forEach((v) => {
-        switch (v.itemId) {
-          case 2001: // 传送带
-          case 2002: // 高速传送带
-          case 2003: // 极速传送带
-            var count = v.parameters?.count;
-            var iconId = v.parameters?.iconId;
-            // 保存带标记且conut不为0的传送带
-            if (count && iconId) {
-              if (count < 0) {
-                // 解决官方负数标记数复制后会+1的bug
-                count -= 1;
-                v.parameters.count = count;
-              }
-              beltMap[v.index] = {
-                count: +count,
-                iconId: iconId,
-                linkSpeed: 0,
-                linkNum: 0,
-                beltItem: v,
-              };
-
-              if (outputCountMode == "speed") {
-                // 输出已匹配速度
-                v.parameters.count = beltMap[v.index].linkSpeed;
-              } else if (outputCountMode == "num") {
-                // 输出已匹配数量
-                v.parameters.count = beltMap[v.index].linkNum;
-              } else if (outputCountMode == "clear") {
-                // 清除标记
-                v.parameters.count = 0;
-                v.parameters.iconId = 0;
-              }
+        if (itemsUtil.isBelt(v.itemId)) {
+          // 传送带
+          var count = v.parameters?.count;
+          var iconId = v.parameters?.iconId;
+          // 保存带标记且conut不为0的传送带
+          if (count && iconId) {
+            if (count < 0) {
+              // 解决官方负数标记数复制后会+1的bug
+              count -= 1;
+              v.parameters.count = count;
             }
-            break;
-          case 2011: // 分拣器
-          case 2012: // 高速分拣器
-          case 2013: // 极速分拣器
-            // 保存所有分拣器对象
-            inserterList.push(v);
-            break;
+            beltMap[v.index] = {
+              count: +count,
+              iconId: iconId,
+              linkSpeed: 0,
+              linkNum: 0,
+              beltItem: v,
+            };
+
+            if (outputCountMode == "speed") {
+              // 输出已匹配速度
+              v.parameters.count = beltMap[v.index].linkSpeed;
+            } else if (outputCountMode == "num") {
+              // 输出已匹配数量
+              v.parameters.count = beltMap[v.index].linkNum;
+            } else if (outputCountMode == "clear") {
+              // 清除标记
+              v.parameters.count = 0;
+              v.parameters.iconId = 0;
+            }
+          }
+        } else if (itemsUtil.isInserter(v.itemId)) {
+          // 分拣器
+          // 保存所有分拣器对象
+          inserterList.push(v);
         }
       });
 
@@ -1453,7 +1456,7 @@ export default {
           itemId: 2101, // 小型储物仓
           indexs: [],
           axis: "x", // 模型yaw=0时对称方向(对称轴的垂直方向)
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },  // 需调换的接口索引
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 }, // 需调换的接口索引
         },
         {
           itemId: 2102, // 大型储物仓
@@ -1551,6 +1554,12 @@ export default {
           axis: "x",
           alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
         },
+        {
+          itemId: 2902, // 自演化研究站
+          indexs: [],
+          axis: "x",
+          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
+        },
       ];
       if (zoomX * zoomY < 0) {
         res.buildings.forEach((v) => {
@@ -1569,11 +1578,11 @@ export default {
                 // 翻转时调换对称插槽
                 let _slots;
                 if (v.itemId == 2020 && v.parameters.priority) {
-                  // 四向过滤插槽翻转
+                  // 四向 接口优先翻转
                   _slots = v.parameters.priority;
                 }
-                if ((v.itemId == 2103 || v.itemId == 2104) && v.parameters.slots) {
-                  // 物流塔传送带插槽翻转
+                if (itemsUtil.isStation(v.itemId) && v.parameters.slots) {
+                  // 物流运输站、大型采矿机 传送带插槽翻转
                   _slots = v.parameters.slots;
                 }
                 if (_slots) {
@@ -1724,6 +1733,7 @@ export default {
           case 2101: // 小型储物仓
           case 2102: // 大型储物仓
           case 2901: // 矩阵研究站
+          case 2902: // 自演化研究站
             // 带分拣器的可堆叠建筑
             if ((v.localOffset[0].z > 1 || v.localOffset[1].z > 1) && v.inputObjIdx == -1) {
               v.inputObjIdx = res.buildings.length;
@@ -1831,6 +1841,7 @@ export default {
             case 2102: // 大型储物仓
             case 2106: // 储液罐
             case 2901: // 矩阵研究站
+            case 2902: // 自演化研究站
             case 2313: // 喷涂机
               if (v.outputObjIdx != -1) {
                 newItem.outputObjIdx = v.outputObjIdx + prevFloor.length;
@@ -2038,7 +2049,9 @@ export default {
             try {
               blueprintData = PARSER.fromStr(inputData);
             } catch (e) {
-              this.warning("导入的蓝图数据有误");
+              let msg = "导入的蓝图数据有误";
+              console.error(msg, e);
+              this.warning(msg);
               return;
             }
             console.log(blueprintData);
@@ -2100,7 +2113,9 @@ export default {
             blueprintData = PARSER.fromStr(inputData);
             resJSON = JSON.stringify(blueprintData);
           } catch (e) {
-            this.warning(`导入的蓝图数据有误[${fullFileName}](${len})...`);
+            let msg = `导入的蓝图数据有误[${fullFileName}](${len})...`;
+            console.error(msg, e);
+            this.warning(msg);
             return;
           }
           this.toTxt(resJSON, `${fileName}_to_json.json`);
