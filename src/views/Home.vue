@@ -1412,205 +1412,54 @@ export default {
       res.cursorOffset.x = ~~(W / 2);
       res.cursorOffset.y = ~~(H / 2);
 
-      let overturnX = zoomX < 0; // x翻转
-      let overturnY = zoomY < 0; // y翻转
-      // 传送带接口建筑
-      let beltSlotBuilds = [
-        {
-          itemId: 2020, // 四向分流器
-          modelIndex: 38, // 十字单层
-          indexs: [],
-          axis: "x", // 模型yaw=0时对称方向(对称轴的垂直方向)
-          alterSlot: { 1: 3, 3: 1 }, // 需调换的接口索引
-        },
-        {
-          itemId: 2020, // 四向分流器
-          modelIndex: 39, // 一字双层
-          indexs: [],
-          axis: "x",
-          alterSlot: {},
-        },
-        {
-          itemId: 2020, // 四向分流器
-          modelIndex: 40, // 十字双层
-          indexs: [],
-          axis: "x",
-          alterSlot: { 1: 3, 3: 1 },
-        },
-        {
-          itemId: 2103, // 行星内物流运输站
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-        },
-        {
-          itemId: 2104, // 星际物流运输站
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-        },
-      ];
-      // 分拣器接口建筑
-      let inserterSlotBuilds = [
-        {
-          itemId: 2101, // 小型储物仓
-          indexs: [],
-          axis: "x", // 模型yaw=0时对称方向(对称轴的垂直方向)
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 }, // 需调换的接口索引
-        },
-        {
-          itemId: 2102, // 大型储物仓
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-        },
-        {
-          itemId: 2204, // 火力发电厂
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 4, 1: 3, 3: 1, 4: 0 }, // 2不对称
-        },
-        {
-          itemId: 2211, // 微型聚变发电站
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 4, 1: 3, 3: 1, 4: 0 }, // 2不对称
-        },
-        {
-          itemId: 2302, // 电弧熔炉
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-        },
-        {
-          itemId: 2315, // 位面熔炉
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-        },
-        {
-          itemId: 2303, // 制造台 Mk.I
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-        },
-        {
-          itemId: 2304, // 制造台 Mk.II
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-        },
-        {
-          itemId: 2305, // 制造台 Mk.III
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-        },
-        {
-          itemId: 2308, // 原油精炼厂
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 5, 1: 4, 2: 3, 3: 2, 4: 1, 5: 0, 6: 8, 8: 6 },
-        },
-        {
-          itemId: 2309, // 化工厂
-          indexs: [],
-          axis: "y",
-          alterSlot: { 0: 6, 1: 5, 2: 4, 3: 7, 4: 2, 5: 1, 6: 0, 7: 3 },
-        },
-        {
-          itemId: 2317, // 量子化工厂
-          indexs: [],
-          axis: "y",
-          alterSlot: { 0: 6, 1: 5, 2: 4, 3: 7, 4: 2, 5: 1, 6: 0, 7: 3 },
-        },
-        {
-          itemId: 2310, // 微型粒子对撞机
-          indexs: [],
-          axis: "y",
-          alterSlot: { 0: 8, 1: 7, 2: 6, 3: 5, 5: 3, 6: 2, 7: 1, 8: 0 },
-        },
-        {
-          itemId: 2311, // 电磁轨道弹射器
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 1, 1: 0 },
-        },
-        {
-          itemId: 2210, // 人造恒星
-          indexs: [],
-          axis: "x",
-          alterSlot: { 1: 3, 3: 1 },
-        },
-        {
-          itemId: 2312, // 垂直发射井
-          indexs: [],
-          axis: "x",
-          alterSlot: { 1: 2, 2: 1 },
-        },
-        {
-          itemId: 2901, // 矩阵研究站
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-        },
-        {
-          itemId: 2902, // 自演化研究站
-          indexs: [],
-          axis: "x",
-          alterSlot: { 0: 2, 2: 0, 3: 11, 4: 10, 5: 9, 6: 8, 8: 6, 9: 5, 10: 4, 11: 3 },
-        },
-      ];
-      if (zoomX * zoomY < 0) {
+      let overturnX = zoomX < 0; // x是否翻转
+      let overturnY = zoomY < 0; // y是否翻转
+      let isOverturn = overturnX ^ overturnY; // 是否存在翻转
+      // 带分拣器插槽的建筑索引
+      const beltSlotBuildIndexs = new Set();
+      // 带分拣器插槽的建筑索引
+      const inserterSlotBuildIndexs = new Set();
+      // 存在翻转时
+      if (isOverturn) {
         res.buildings.forEach((v) => {
-          for (let build of beltSlotBuilds) {
-            if (
-              build.itemId == v.itemId &&
-              (!build.modelIndex || build.modelIndex == v.modelIndex)
-            ) {
-              // 存在翻转时（水平垂直都翻转等于没翻转）
-              if (overturnX ^ overturnY) {
-                // y轴对称模型旋转180度
-                if (build.axis == "y") {
-                  v.yaw[0] -= 180;
-                  v.yaw[1] -= 180;
-                }
-                // 翻转时调换对称插槽
-                let _slots;
-                if (v.itemId == 2020 && v.parameters.priority) {
-                  // 四向 接口优先翻转
-                  _slots = v.parameters.priority;
-                }
-                if (itemsUtil.isStation(v.itemId) && v.parameters.slots) {
-                  // 物流运输站、大型采矿机 传送带插槽翻转
-                  _slots = v.parameters.slots;
-                }
-                if (_slots) {
-                  let idxs = new Set(); // 已调换的插槽
-                  for (let oriIdx of Object.keys(build.alterSlot)) {
-                    oriIdx = +oriIdx;
-                    if (idxs.has(oriIdx)) continue;
-                    let tarIdx = build.alterSlot[oriIdx];
-                    [_slots[oriIdx], _slots[tarIdx]] = [_slots[tarIdx], _slots[oriIdx]];
-                    idxs.add(oriIdx);
-                    idxs.add(tarIdx);
-                  }
+          // 带传送带插槽的建筑
+          if (itemsUtil.isBeltSlotBuild(v.itemId)) {
+            // x轴对称模型旋转180度
+            if (itemsUtil.getBeltSlotBuildAxis(v.itemId, v.modelIndex) == "x") {
+              v.yaw[0] -= 180;
+              v.yaw[1] -= 180;
+            }
+
+            // 翻转时调换传送带插槽相关参数
+            let _slots;
+            if (v.itemId == 2020 && v.parameters.priority) {
+              // 四向优先输入输出参数
+              _slots = v.parameters.priority;
+            }
+            if (itemsUtil.isStation(v.itemId) && v.parameters.slots) {
+              // 运输站类建筑传送带接口参数
+              _slots = v.parameters.slots;
+            }
+
+            if (_slots) {
+              const alterSlot = itemsUtil.getBeltSlotBuildInfo(v.itemId, v.modelIndex)?.alterSlot;
+              if (alterSlot) {
+                for (let [idx1, idx2] of alterSlot) {
+                  [_slots[idx1], _slots[idx2]] = [_slots[idx2], _slots[idx1]];
                 }
               }
-              build.indexs.push(v.index);
-              break;
             }
+            beltSlotBuildIndexs.add(v.index);
           }
-          for (let build of inserterSlotBuilds) {
-            if (build.itemId == v.itemId) {
-              // 存在翻转时，y轴对称模型旋转180度
-              if (overturnX ^ overturnY && build.axis == "y") {
-                v.yaw[0] -= 180;
-                v.yaw[1] -= 180;
-              }
-              build.indexs.push(v.index);
-              break;
+
+          // 带分拣器插槽的建筑
+          if (itemsUtil.isInserterSlotBuild(v.itemId)) {
+            // 存在翻转时，x轴对称模型旋转180度
+            if (isOverturn && itemsUtil.getInserterSlotBuildAxis(v.itemId) == "x") {
+              v.yaw[0] -= 180;
+              v.yaw[1] -= 180;
             }
+            inserterSlotBuildIndexs.add(v.index);
           }
         });
       }
@@ -1636,63 +1485,63 @@ export default {
           v.yaw[0] = 180 - v.yaw[0];
           v.yaw[1] = 180 - v.yaw[1];
         }
-
         v.yaw[0] -= rotate;
         v.yaw[1] -= rotate;
 
-        // 翻转接口
-        if (zoomX * zoomY < 0) {
+        // 存在翻转时
+        if (isOverturn) {
           if (v.itemId == 2204 || v.itemId == 2211) {
             // 火力发电厂、微型聚变发电站翻转偏移
-            v.localOffset[0].x += 1 * Math.cos((v.yaw[0] * Math.PI) / 180);
-            v.localOffset[1].x += 1 * Math.cos((v.yaw[1] * Math.PI) / 180);
-            v.localOffset[0].y -= 1 * Math.sin((v.yaw[0] * Math.PI) / 180);
-            v.localOffset[1].y -= 1 * Math.sin((v.yaw[1] * Math.PI) / 180);
-          }
-          if (v.itemId == 2309 || v.itemId == 2317) {
+            const offsetX = 1; // 偏移量x
+            const offsetY = -1; // 偏移量y
+            v.localOffset[0].x += offsetX * Math.cos((v.yaw[0] * Math.PI) / 180);
+            v.localOffset[1].x += offsetX * Math.cos((v.yaw[1] * Math.PI) / 180);
+            v.localOffset[0].y += offsetY * Math.sin((v.yaw[0] * Math.PI) / 180);
+            v.localOffset[1].y += offsetY * Math.sin((v.yaw[1] * Math.PI) / 180);
+          } else if (v.itemId == 2309 || v.itemId == 2317) {
             // 化工厂、量子化工厂翻转偏移
-            v.localOffset[0].x -= 1 * Math.sin((v.yaw[0] * Math.PI) / 180);
-            v.localOffset[1].x -= 1 * Math.sin((v.yaw[1] * Math.PI) / 180);
-            v.localOffset[0].y -= 1 * Math.cos((v.yaw[0] * Math.PI) / 180);
-            v.localOffset[1].y -= 1 * Math.cos((v.yaw[1] * Math.PI) / 180);
-          }
-          switch (v.itemId) {
-            case 2001: // 传送带
-            case 2002: // 高速传送带
-            case 2003: // 极速传送带
-              if (overturnX ^ overturnY) {
-                beltSlotBuilds.forEach((build) => {
-                  build.indexs.forEach((index) => {
-                    if (v.inputObjIdx == index) {
-                      const inputSlot = build.alterSlot[+v.inputFromSlot];
-                      if (inputSlot != null) v.inputFromSlot = inputSlot;
-                    }
-                    if (v.outputObjIdx == index) {
-                      const outputSlot = build.alterSlot[+v.outputToSlot];
-                      if (outputSlot != null) v.outputToSlot = outputSlot;
-                    }
-                  });
-                });
-              }
-              break;
-            case 2011: // 分拣器
-            case 2012: // 高速分拣器
-            case 2013: // 极速分拣器
-              if (overturnX ^ overturnY) {
-                inserterSlotBuilds.forEach((build) => {
-                  build.indexs.forEach((index) => {
-                    if (v.inputObjIdx == index) {
-                      const inputSlot = build.alterSlot[+v.inputFromSlot];
-                      if (inputSlot != null) v.inputFromSlot = inputSlot;
-                    }
-                    if (v.outputObjIdx == index) {
-                      const outputSlot = build.alterSlot[+v.outputToSlot];
-                      if (outputSlot != null) v.outputToSlot = outputSlot;
-                    }
-                  });
-                });
-              }
-              break;
+            const offsetX = -1; // 偏移量x
+            const offsetY = -1; // 偏移量y
+            v.localOffset[0].x += offsetX * Math.sin((v.yaw[0] * Math.PI) / 180);
+            v.localOffset[1].x += offsetX * Math.sin((v.yaw[1] * Math.PI) / 180);
+            v.localOffset[0].y += offsetY * Math.cos((v.yaw[0] * Math.PI) / 180);
+            v.localOffset[1].y += offsetY * Math.cos((v.yaw[1] * Math.PI) / 180);
+          } else if (itemsUtil.isBelt(v.itemId)) {
+            // 传送带 调换接到建筑上的插槽索引
+            if (beltSlotBuildIndexs.has(v.inputObjIdx)) {
+              // 输入端
+              const inputBuild = res.buildings[v.inputObjIdx];
+              const newInputSlot = itemsUtil.alterBeltSlot(
+                inputBuild.itemId,
+                inputBuild.modelIndex,
+                v.inputFromSlot
+              );
+              if (newInputSlot != null) v.inputFromSlot = newInputSlot;
+            }
+            if (beltSlotBuildIndexs.has(v.outputObjIdx)) {
+              // 输出端
+              const outputBuild = res.buildings[v.outputObjIdx];
+              const newOutputSlot = itemsUtil.alterBeltSlot(
+                outputBuild.itemId,
+                outputBuild.modelIndex,
+                v.outputToSlot
+              );
+              if (newOutputSlot != null) v.outputToSlot = newOutputSlot;
+            }
+          } else if (itemsUtil.isInserter(v.itemId)) {
+            // 分拣器 调换接到建筑上的插槽索引
+            if (inserterSlotBuildIndexs.has(v.inputObjIdx)) {
+              // 输入端
+              const inputBuildItemId = res.buildings[v.inputObjIdx]?.itemId;
+              const newInputSlot = itemsUtil.alterInserterSlot(inputBuildItemId, v.inputFromSlot);
+              if (newInputSlot != null) v.inputFromSlot = newInputSlot;
+            }
+            if (inserterSlotBuildIndexs.has(v.outputObjIdx)) {
+              // 输出端
+              const outputBuildItemId = res.buildings[v.outputObjIdx]?.itemId;
+              const newOutputSlot = itemsUtil.alterInserterSlot(outputBuildItemId, v.outputToSlot);
+              if (newOutputSlot != null) v.outputToSlot = newOutputSlot;
+            }
           }
         }
       });
@@ -1714,70 +1563,31 @@ export default {
       let res = this.deepCopy(blueprintData);
       let needBase = false; // 是否卡地基浮空
       let changIndex = false; // 是否变更index顺序
-      let inserterList = []; // 分拣器集合
       let newBuildings = [];
       res.buildings.forEach((v) => {
         v.localOffset[0].z += +offsetZ;
         v.localOffset[1].z += +offsetZ;
-        switch (v.itemId) {
-          case 2020: // 四向分流器
-          case 2040: // 自动集装器
-          case 2106: // 储液罐
-            // 可堆叠建筑
-            if ((v.localOffset[0].z > 1 || v.localOffset[1].z > 1) && v.inputObjIdx == -1) {
-              v.inputObjIdx = res.buildings.length;
-              needBase = true;
-            }
-            newBuildings.push(v);
-            break;
-          case 2101: // 小型储物仓
-          case 2102: // 大型储物仓
-          case 2901: // 矩阵研究站
-          case 2902: // 自演化研究站
-            // 带分拣器的可堆叠建筑
-            if ((v.localOffset[0].z > 1 || v.localOffset[1].z > 1) && v.inputObjIdx == -1) {
-              v.inputObjIdx = res.buildings.length;
-              needBase = true;
-              // 悬空建筑如果先建分拣器会导致输出端链接失效，判断建筑为悬空建筑时挪到最前面
-              newBuildings.unshift(v);
-              changIndex = true;
-            } else {
-              newBuildings.push(v);
-            }
-            break;
-          case 2001: // 传送带
-          case 2002: // 高速传送带
-          case 2003: // 极速传送带
-          case 2030: // 流速监测器
-            newBuildings.push(v);
-            break;
-          case 2011: // 分拣器
-          case 2012: // 高速分拣器
-          case 2013: // 极速分拣器
-            inserterList.push(v);
-            newBuildings.push(v);
-            break;
-          case 2313: // 喷涂机
-            // 不能用地基当底
-            newBuildings.push(v);
-            break;
-          case 1131: // 地基
-            v.localOffset[0].z = -10;
-            v.localOffset[1].z = -10;
-            newBuildings.push(v);
-            break;
-          default:
-            if ((v.localOffset[0].z > 1 || v.localOffset[1].z > 1) && v.inputObjIdx == -1) {
-              v.inputObjIdx = res.buildings.length;
-              needBase = true;
-              // 悬空建筑如果先建分拣器会导致输出端链接失效，判断建筑为悬空建筑时挪到最前面
-              newBuildings.unshift(v);
-              changIndex = true;
-            } else {
-              newBuildings.push(v);
-            }
-            break;
+        if (v.itemId == 1131) {
+          // 地基
+          v.localOffset[0].z = -10;
+          v.localOffset[1].z = -10;
+        } else if (
+          (v.localOffset[0].z > 1 || v.localOffset[1].z > 1) &&
+          v.inputObjIdx == -1 &&
+          !itemsUtil.isHanging(v.itemId)
+        ) {
+          // 浮空且没底的不可悬空建筑
+          v.inputObjIdx = res.buildings.length; // 卡浮空，底指向地基
+          needBase = true;
+          // 带分拣器插槽的建筑
+          if (itemsUtil.isInserterSlotBuild(v.itemId)) {
+            // 卡浮空的建筑 如果先建分拣器 会导致输出端链接失效，挪到最前面确保比分拣器先创建
+            newBuildings.unshift(v);
+            changIndex = true;
+            return;
+          }
         }
+        newBuildings.push(v);
       });
       if (needBase) {
         newBuildings.push({
@@ -1834,58 +1644,25 @@ export default {
           newItem.index = v.index + prevFloor.length;
           newItem.localOffset[0].z += +spacing;
           newItem.localOffset[1].z += +spacing;
-          switch (v.itemId) {
-            case 2020: // 四向分流器
-            case 2040: // 自动集装器
-            case 2101: // 小型储物仓
-            case 2102: // 大型储物仓
-            case 2106: // 储液罐
-            case 2901: // 矩阵研究站
-            case 2902: // 自演化研究站
-            case 2313: // 喷涂机
-              if (v.outputObjIdx != -1) {
-                newItem.outputObjIdx = v.outputObjIdx + prevFloor.length;
+          if (v.itemId === 1131) {
+            // 地基
+            newItem.localOffset[0].z = -10;
+            newItem.localOffset[1].z = -10;
+          } else {
+            if (v.outputObjIdx != -1) {
+              newItem.outputObjIdx = v.outputObjIdx + prevFloor.length;
+            }
+            if (v.inputObjIdx != -1) {
+              newItem.inputObjIdx = v.inputObjIdx + prevFloor.length;
+            } else {
+              // 没有底 且为 可堆叠建造建筑
+              if (isPile && itemsUtil.isStackable(v.itemId)) {
+                // 堆叠,递归找到可叠加节点的最高层
+                newItem.inputObjIdx = this.findUppermost(prevFloor, v.itemId, v.index);
               }
-              if (v.inputObjIdx != -1) {
-                newItem.inputObjIdx = v.inputObjIdx + prevFloor.length;
-              } else {
-                if (isPile) {
-                  // 堆叠,递归找到可叠加节点的最高层
-                  newItem.inputObjIdx = this.findUppermost(prevFloor, v.itemId, v.index);
-                }
-              }
-              nextFloor.push(newItem);
-              break;
-            case 2001: // 传送带
-            case 2002: // 高速传送带
-            case 2003: // 极速传送带
-            case 2011: // 分拣器
-            case 2012: // 高速分拣器
-            case 2013: // 极速分拣器
-            case 2030: // 流速监测器
-              if (v.outputObjIdx != -1) {
-                newItem.outputObjIdx = v.outputObjIdx + prevFloor.length;
-              }
-              if (v.inputObjIdx != -1) {
-                newItem.inputObjIdx = v.inputObjIdx + prevFloor.length;
-              }
-              nextFloor.push(newItem);
-              break;
-            case 1131: // 地基
-              newItem.localOffset[0].z = -10;
-              newItem.localOffset[1].z = -10;
-              nextFloor.push(newItem);
-              break;
-            default:
-              if (v.outputObjIdx != -1) {
-                newItem.outputObjIdx = v.outputObjIdx + prevFloor.length;
-              }
-              if (v.inputObjIdx != -1) {
-                newItem.inputObjIdx = v.inputObjIdx + prevFloor.length;
-              }
-              nextFloor.push(newItem);
-              break;
+            }
           }
+          nextFloor.push(newItem);
         });
         prevFloor = nextFloor;
         res.buildings.push(...nextFloor);
