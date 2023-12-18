@@ -44,38 +44,38 @@
 | -	shortDesc          | String                        | *cells[10]*                 | 缩略图文字                                                   |
 | -	desc               | String                        | *cells[11]*                 | 蓝图介绍                                                     |
 |                         |                               | **长度(字节)**              | 首个 `"` 到第二个 `"` 间的字符串解析为字节流<br />**以下按蓝图数据按字节流从左到右排列** |
-| version                 | Number                        | 4                           |                                                              |
-| cursorOffset            | Object                        |                             |                                                              |
+| version                 | Number                        | 4                           | 一般为1                                                      |
+| cursorOffset            | Object                        |                             | 预览蓝图时的鼠标锚点偏移                                     |
 | -	x                  | Number                        | 4                           |                                                              |
 | -	y                  | Number                        | 4                           |                                                              |
-| cursorTargetArea        | Number                        | 4                           |                                                              |
-| dragBoxSize             | Object                        |                             |                                                              |
+| cursorTargetArea        | Number                        | 4                           | 对应areas索引，一般为0                                       |
+| dragBoxSize             | Object                        |                             | 长按鼠标拖拽复制建筑时，间隔的长宽<br />一般与*areas.size*相同 |
 | -	x                  | Number                        | 4                           |                                                              |
 | -	y                  | Number                        | 4                           |                                                              |
-| primaryAreaIdx          | Number                        | 4                           |                                                              |
-| numAreas                | -                             | 1                           | areas数组长度（仅读取）                                      |
+| primaryAreaIdx          | Number                        | 4                           | 对应areas索引，一般为0                                       |
+| numAreas                | -                             | 1                           | areas数组长度（仅读取），一般为1                             |
 | areas                   | Array(*numAreas*)             |                             |                                                              |
 | -	*_array_item*      | **[AREA](#area对象)**         | 14                          |                                                              |
 | numBuildings            | -                             | 4                           | buildings数组长度（仅读取）                                  |
-| buildings               | Array(*numBuildings*)         |                             |                                                              |
+| buildings               | Array(*numBuildings*)         |                             | 建筑信息                                                     |
 | -	*_array_item*      | **[BUILDING](#building对象)** | 61 + *_parameterLength* * 4 |                                                              |
 
 
 
 #### <span id="area对象">**AREA对象**</span>
 
-| 字段              | 字段类型 | 长度(字节) | 备注     |
-| ----------------- | -------- | ---------- | -------- |
-| index             | Number   | 1          |          |
-| parentIndex       | Number   | 1          |          |
-| tropicAnchor      | Number   | 2          |          |
-| areaSegments      | Number   | 2          |          |
-| anchorLocalOffset | Object   |            | 锚点偏移 |
-| -	x            | Number   | 2          |          |
-| -	y            | Number   | 2          |          |
-| size              | Object   |            |          |
-| -	x            | Number   | 2          |          |
-| -	y            | Number   | 2          |          |
+| 字段              | 字段类型 | 长度(字节) | 备注                 |
+| ----------------- | -------- | ---------- | -------------------- |
+| index             | Number   | 1          | 数组索引             |
+| parentIndex       | Number   | 1          |                      |
+| tropicAnchor      | Number   | 2          |                      |
+| areaSegments      | Number   | 2          |                      |
+| anchorLocalOffset | Object   |            |                      |
+| -	x            | Number   | 2          |                      |
+| -	y            | Number   | 2          |                      |
+| size              | Object   |            | 所有建筑的包围盒长宽 |
+| -	x            | Number   | 2          |                      |
+| -	y            | Number   | 2          |                      |
 
 
 
@@ -83,27 +83,27 @@
 
 | 字段               | 字段类型                | 长度(字节)            | 备注                            |
 | ------------------ | ----------------------- | --------------------- | ------------------------------- |
-| index              | Number                  | 4                     |                                 |
-| areaIndex          | Number                  | 1                     |                                 |
-| localOffset        | Array(2)                |                       |                                 |
+| index              | Number                  | 4                     | 数组索引                        |
+| areaIndex          | Number                  | 1                     | 对应areas索引，一般为0          |
+| localOffset        | Array(2)                |                       | 建筑物相对坐标                  |
 | -	*_array_item* | Object                  |                       |                                 |
 | -	-	x        | Number                  | 4                     |                                 |
 | -	-	y        | Number                  | 4                     |                                 |
 | -	-	z        | Number                  | 4                     |                                 |
-| yaw                | Array(2)                |                       |                                 |
+| yaw                | Array(2)                |                       | 建筑物旋转角度（单位：角度）    |
 | -	*_array_item* | Number                  | 4                     |                                 |
-| itemId             | Number                  | 2                     |                                 |
-| modelIndex         | Number                  | 2                     |                                 |
-| outputObjIdx       | Number                  | 4                     |                                 |
-| inputObjIdx        | Number                  | 4                     |                                 |
-| outputToSlot       | Number                  | 1                     |                                 |
-| inputFromSlot      | Number                  | 1                     |                                 |
-| outputFromSlot     | Number                  | 1                     |                                 |
-| inputToSlot        | Number                  | 1                     |                                 |
-| outputOffset       | Number                  | 1                     |                                 |
-| inputOffset        | Number                  | 1                     |                                 |
-| recipeId           | Number                  | 2                     |                                 |
-| filterId           | Number                  | 2                     |                                 |
+| itemId             | Number                  | 2                     | 建筑id                          |
+| modelIndex         | Number                  | 2                     | 模型id                          |
+| outputObjIdx       | Number                  | 4                     | 输出端目标建筑索引              |
+| inputObjIdx        | Number                  | 4                     | 输入端目标建筑索引              |
+| outputToSlot       | Number                  | 1                     | 输出端绑定到目标建筑的插槽索引  |
+| inputFromSlot      | Number                  | 1                     | 输入端绑定到目标建筑的插槽索引  |
+| outputFromSlot     | Number                  | 1                     | (建筑物自身属性)                |
+| inputToSlot        | Number                  | 1                     | (建筑物自身属性)                |
+| outputOffset       | Number                  | 1                     | 输出端插槽偏移，常见于分拣器    |
+| inputOffset        | Number                  | 1                     | 输入端插槽偏移，常见于分拣器    |
+| recipeId           | Number                  | 2                     | 配方id，常见于制造厂类建筑      |
+| filterId           | Number                  | 2                     | 过滤物品id，常见于分拣器、四向  |
 | parameterLength    | -                       | 2                     | parameters长度（每单位：4字节） |
 | parameters         | **[PARAM](#param对象)** | *parameterLength* * 4 | 建筑配置参数                    |
 

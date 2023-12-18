@@ -7,6 +7,9 @@
             <el-menu-item v-for="(item, index) in menuData" :index="`${index}`" :key="index">
               <span slot="title">{{ item.menuName }}</span>
             </el-menu-item>
+            <el-menu-item index="-3">
+              <span slot="title">数据字典</span>
+            </el-menu-item>
             <el-menu-item index="-1">
               <span slot="title">联系作者</span>
             </el-menu-item>
@@ -1959,6 +1962,10 @@ export default {
       }
       if (index == "-2") {
         window.open("https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666");
+        return;
+      }
+      if (index == "-3") {
+        window.open("https://gitee.com/cying314/edit-dspblue-print#%E8%93%9D%E5%9B%BE%E6%95%B0%E6%8D%AE%E5%AD%97%E5%85%B8");
         return;
       }
       let _this = this;
