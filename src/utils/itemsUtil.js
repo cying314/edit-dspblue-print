@@ -29,8 +29,10 @@ export const assemblerBuildIds = new Set([
     2303, // 制造台 Mk.I
     2304, // 制造台 Mk.II
     2305, // 制造台 Mk.III
+    2318, // 重组式制造台
     2302, // 电弧熔炉
     2315, // 位面熔炉
+    2319, // 负熵熔炉
     2308, // 原油精炼厂
     2309, // 化工厂
     2317, // 量子化工厂
@@ -38,12 +40,9 @@ export const assemblerBuildIds = new Set([
 ]);
 
 /** 是否 制造厂类建筑(需指定制造配方的建筑) */
-export function isAssemble(id) { return assemblerBuildIds.has(id); }
+export function isAssembler(id) { return assemblerBuildIds.has(id); }
 
-/** 是否 储物仓 */
-export function isStorage(id) { return id === 2101 || id === 2102; }
-
-/** 是否 矩阵研究站 */
+/** 是否 研究站 */
 export function isLab(id) { return id === 2901 || id === 2902; }
 
 /** 是否 运输站类建筑（物流运输站、大型采矿机） */
@@ -96,6 +95,9 @@ export const inserterSlotBuildInfos = {
     2315: { // 位面熔炉
         axis: "y", alterSlot: [[0, 2], [3, 11], [4, 10], [5, 9], [6, 8]],
     },
+    2319: { // 负熵熔炉
+        axis: "y", alterSlot: [[0, 2], [3, 11], [4, 10], [5, 9], [6, 8]],
+    },
     2303: { // 制造台 Mk.I
         axis: "y", alterSlot: [[0, 2], [3, 11], [4, 10], [5, 9], [6, 8]],
     },
@@ -103,6 +105,9 @@ export const inserterSlotBuildInfos = {
         axis: "y", alterSlot: [[0, 2], [3, 11], [4, 10], [5, 9], [6, 8]],
     },
     2305: { // 制造台 Mk.III
+        axis: "y", alterSlot: [[0, 2], [3, 11], [4, 10], [5, 9], [6, 8]],
+    },
+    2318: { // 重组式制造台
         axis: "y", alterSlot: [[0, 2], [3, 11], [4, 10], [5, 9], [6, 8]],
     },
     2308: { // 原油精炼厂
@@ -131,6 +136,9 @@ export const inserterSlotBuildInfos = {
     },
     2902: { // 自演化研究站
         axis: "y", alterSlot: [[0, 2], [3, 11], [4, 10], [5, 9], [6, 8]],
+    },
+    3009: { // 战场分析基站
+        axis: "y", alterSlot: [[0, 8], [1, 7], [2, 6], [3, 5]],
     },
 };
 
@@ -217,3 +225,15 @@ export function alterBeltSlot(id, modelIndex, originSlot) {
     }
     return null;
 }
+
+/** 炮台类 建筑id */
+export const turretBuildIds = new Set([
+    3001, // 高斯机枪塔
+    3002, // 高频激光塔
+    3003, // 聚爆加农炮
+    3004, // 磁化电浆炮
+    3005, // 导弹防御塔
+]);
+
+/** 是否 炮台 */
+export function isTurret(id) { return turretBuildIds.has(id); }

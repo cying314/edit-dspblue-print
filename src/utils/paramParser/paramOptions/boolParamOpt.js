@@ -4,7 +4,7 @@ import ParamOpt from "./paramOpt";
  */
 export default class BoolParamOpt extends ParamOpt {
     /**
-     * @param {Number} pos 参数相对位置（在DataView中的字节偏移量/4）
+     * @param {Number | Function} pos 参数相对位置（在DataView中的字节偏移量/4）
      * @param {Number} trueValue true对应的值（默认1）
      * @param {Number} falseValue false对应的值（默认-1）
      */
@@ -14,7 +14,7 @@ export default class BoolParamOpt extends ParamOpt {
         this.falseValue = falseValue;
     }
     /**
-     * @param {Number} pos 参数相对位置（在DataView中的字节偏移量/4）
+     * @param {Number | Function} pos 参数相对位置（在DataView中的字节偏移量/4）
      * @param {Number} trueValue true对应的值（默认1）
      * @param {Number} falseValue false对应的值（默认-1）
      */

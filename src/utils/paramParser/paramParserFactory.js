@@ -1,7 +1,7 @@
 import DefaultParamParser from "./defaultParamParser";
 import BoolParamOpt from "./paramOptions/boolParamOpt";
 import FunParamOpt from "./paramOptions/funParamOpt";
-import ParamOpt from "./paramOptions/paramOpt";
+import ParamOpt, { getParam } from "./paramOptions/paramOpt";
 import ParamParser from "./paramParser";
 import * as itemUtil from "../itemsUtil";
 
@@ -12,20 +12,23 @@ export function getParamParser(itemId) {
     } else if (itemUtil.isInserter(itemId)) {
         // 分拣器
         return inserterParamParser;
-    } else if (itemUtil.isAssemble(itemId)) {
+    } else if (itemUtil.isAssembler(itemId)) {
         // 制造厂类建筑(需指定制造配方的建筑)
         return assembleParamParser;
-    } else if (itemUtil.isStorage(itemId)) {
-        // 储物仓
-        return storageParamParser;
     } else if (itemUtil.isLab(itemId)) {
         // 研究站
         return labParamParser;
+    } else if (itemUtil.isTurret(itemId)) {
+        // 炮台
+        return turretParamParser;
     } else {
         const parameterParsers = new Map([
-            [2103, logisticStationParamParser], // 行星内物流运输站
-            [2104, interstellarStationParamParser], // 星际物流运输站
-            [2316, advancedMiningMachineParamParser], // 大型采矿机
+            [2103, getStationParamsParser(4, 12)], // 行星内物流运输站
+            [2104, getStationParamsParser(5, 12)], // 星际物流运输站
+            [2316, getStationParamsParser(1, 9)], // 大型采矿机
+            [2101, getStorageParamParser(30)], // 小型储物仓
+            [2102, getStorageParamParser(60)], // 大型储物仓
+            [3009, battleBaseParamParser], // 战场分析基站
             [2020, splitterParamParser], // 四向分流器
             [2106, tankParamParser], // 储液罐
             [2311, ejectorParamParser], // 电磁轨道弹射器
@@ -33,7 +36,7 @@ export function getParamParser(itemId) {
             [2209, energyExchangerParamParser], // 能量枢纽
             [2312, verticalLaunchingSiloParamParser], // 垂直发射井
             [2030, MonitorParamParser], // 流速监测器
-            [2107, distributorParser], // 物流配送器
+            [2107, dispenserParamParser], // 物流配送器
         ]);
         const parser = parameterParsers.get(itemId);
         if (parser !== undefined) return parser;
@@ -43,96 +46,134 @@ export function getParamParser(itemId) {
 }
 
 // 最大充能功率 MW -> 原始值
-function workEnergyPerTickEncode(pv) { return Math.round(pv * 50000 / 3) }
+function workEnergyPerTickEncode(pVal) { return Math.round(pVal * 50000 / 3) }
 // 最大充能功率 原始值 -> MW
-function workEnergyPerTickDecode(ov) { return Math.round(ov / 5000 * 3) / 10 }
+function workEnergyPerTickDecode(oVal) { return Math.round(oVal / 5000 * 3) / 10 }
 
-// 运输站类建筑 数据参数
-const StationParamsMeta = {
-    size: 2048, // 总长度
-    base: 320, // 主参数偏移量
-    storage: { base: 0, stride: 6 }, // 物品栏列表参数（首行偏移量，每行长度）
-    slots: { base: 192, stride: 4 }, // 传送带接口列表参数（首行偏移量，每行长度）
-};
 /**
- * 获取 运输站类建筑 参数模板
- * @param {Object} desc {
- *   @param maxItemKind 最大物品栏位 
- *   @param numSlots 建筑传送带接口数目
- * }
+ * 获取 运输站类建筑 ParamParser
+ * @param maxItemKind 最大物品栏位 
+ * @param numSlots 建筑传送带插槽数目
  */
-function getStationParamsOptions(desc) {
-    const base = StationParamsMeta.base;
-    const result = {
-        storage: [], // 运输站物品栏位
-        slots: [], // 传送带接口
-        workEnergyPerTick: FunParamOpt.of(base + 0, workEnergyPerTickEncode, workEnergyPerTickDecode), // 最大充能功率(单位：MW) -> 30-300
-        tripRangeOfDrones: FunParamOpt.of(base + 1, (pv) => {
-            return Math.round(Math.sin((90 - pv) * Math.PI / 180) * 100000000);
-        }, (ov) => {
-            return 90 - Math.round(Math.asin(ov / 100000000) * 180 / Math.PI);
-        }), // 运输机最远路程(单位：弧度) -> 20-180
-        tripRangeOfShips: FunParamOpt.of(base + 2, (pv) => pv * 24000, (ov) => ov / 24000), // 运输船最远路程 -> 1-60:有限路程(单位：ly) 10000:无限
-        includeOrbitCollector: BoolParamOpt.of(base + 3), // 是否会去轨道采集器取货 Boolean
-        warpEnableDistance: FunParamOpt.of(base + 4, (pv) => pv * 40000, (ov) => ov / 40000), // 曲速启用路程(单位：AU) -> 0.5-60
-        warperNecessary: BoolParamOpt.of(base + 5), // 是否翘曲器必备 Boolean
-        deliveryAmountOfDrones: ParamOpt.of(base + 6), // 运输机起送量(单位：%) -> 1-100
-        deliveryAmountOfShips: ParamOpt.of(base + 7), // 运输船起送量(单位：%) -> 1-100
-        pilerCount: ParamOpt.of(base + 8), // 输出货物集装数量 -> 0:使用科技上限 1-4:指定数量
-        miningSpeed: ParamOpt.of(base + 9), // 开采速度
-        autoFillOfDrones: BoolParamOpt.of(base + 10, 1, 0), // 是否自动补充运输机 Boolean_1_0
-        autoFillOfShips: BoolParamOpt.of(base + 11, 1, 0), // 是否自动补充运输船 Boolean_1_0
+export function getStationParamsParser(maxItemKind, numSlots) {
+    let offset = 0; // 偏移量
+    // 物品栏位参数
+    const storage = [];
+    const storageStride = 6; // 物品栏参数 每行长度 
+    for (var i = 0; i < maxItemKind; i++) {
+        storage.push({
+            itemId: ParamOpt.of(offset + i * storageStride + 0), // 物品id
+            localRole: ParamOpt.of(offset + i * storageStride + 1), // 本地供需配置 -> 0:本地仓储 1:本地供应 2:本地需求
+            remoteRole: ParamOpt.of(offset + i * storageStride + 2), // 星际供需配置 -> 0:星际仓储 1:星际供应 2:星际需求
+            max: ParamOpt.of(offset + i * storageStride + 3), // 物品上限
+            lockAmount: BoolParamOpt.of(offset + i * storageStride + 4, 1, 0), // 锁定数量 Boolean_1_0
+        });
+    }
+
+    // 传送带插槽参数
+    const slots = [];
+    offset = 192; // 插槽参数偏移量
+    const slotsStride = 6; // 物品栏参数 每行长度 
+    for (i = 0; i < numSlots; i++) {
+        slots.push({
+            dir: ParamOpt.of(offset + i * slotsStride + 0), // 传送带接入方向 -> 0:未接入 1:输出 2:输入
+            storageIdx: ParamOpt.of(offset + i * slotsStride + 1), // 输出货物对应物品栏索引 -> 0:不输出 1-5:物品栏索引 6:翘曲器
+        });
+    }
+
+    // 主参数
+    offset = 320; // 主参数偏移量
+    return new ParamParser(2048, {
+        storage: storage, // 物品栏位参数
+        slots: slots, // 传送带插槽参数
+        workEnergyPerTick: FunParamOpt.of(offset + 0, workEnergyPerTickEncode, workEnergyPerTickDecode), // 最大充能功率(单位：MW) -> 30-300
+        tripRangeOfDrones: FunParamOpt.of(offset + 1, (pVal) => {
+            return Math.round(Math.sin((90 - pVal) * Math.PI / 180) * 100000000);
+        }, (oVal) => {
+            return 90 - Math.round(Math.asin(oVal / 100000000) * 180 / Math.PI);
+        }), // 运输机最远路程(单位：度) -> 20-180
+        tripRangeOfShips: FunParamOpt.of(offset + 2, (pVal) => pVal * 24000, (oVal) => oVal / 24000), // 运输船最远路程 -> 1-60:有限路程(单位：ly) 10000:无限
+        includeOrbitCollector: BoolParamOpt.of(offset + 3), // 是否会去轨道采集器取货 Boolean
+        warpEnableDistance: FunParamOpt.of(offset + 4, (pVal) => pVal * 40000, (oVal) => oVal / 40000), // 曲速启用路程(单位：AU) -> 0.5-60
+        warperNecessary: BoolParamOpt.of(offset + 5), // 是否翘曲器必备 Boolean
+        deliveryAmountOfDrones: ParamOpt.of(offset + 6), // 运输机起送量(单位：%) -> 1-100
+        deliveryAmountOfShips: ParamOpt.of(offset + 7), // 运输船起送量(单位：%) -> 1-100
+        pilerCount: ParamOpt.of(offset + 8), // 输出货物集装数量 -> 0:使用科技上限 1-4:指定数量
+        miningSpeed: ParamOpt.of(offset + 9), // 开采速度
+        droneAutoReplenish: BoolParamOpt.of(offset + 10, 1, 0), // 是否自动补充运输机 Boolean_1_0
+        shipAutoReplenish: BoolParamOpt.of(offset + 11, 1, 0), // 是否自动补充运输船 Boolean_1_0
+    });
+}
+
+/**
+ * 获取 储物仓 ParamParser
+ * @param gridNum 格子数目
+ */
+export function getStorageParamParser(gridNum = 60) {
+    // 储物仓物品过滤器
+    const storageFilters = [];
+    for (let i = 0; i < gridNum; i++) {
+        storageFilters.push(ParamOpt.of(10 + i)); // 过滤物品id
+    }
+    return new ParamParser(110, {
+        bans: ParamOpt.of(0), // 限制不可自动放入的格子数
+        storageType: ParamOpt.of(1), // 储物仓类型 -> 0:不过滤 9:存在过滤器
+        filters: storageFilters, // 储物仓物品过滤器
+    });
+}
+
+// 战场分析基站 ParamParser
+export const battleBaseParamParser = (() => {
+    // 储物仓物品过滤器
+    const storageFilters = [];
+    const gridNum = 60;
+    const baseOffset = 10; // 基础参数偏移量
+    const filterDecode = (val, v) => {
+        let storageType = getParam(v, 1); // 储物仓类型 -> 0:不过滤 9:存在过滤器
+        return storageType === 9 ? val : 0; // 不存在过滤器时置为0
+    }
+    for (let i = 0; i < gridNum; i++) {
+        storageFilters.push(FunParamOpt.of(baseOffset + i, e => e, filterDecode)); // 过滤物品id
+    }
+    // 动态获取偏移量方法（storageType为0时忽略filters，不占偏移量）
+    let getPos = (pos) => {
+        return (v) => {
+            let storageType = getParam(v, 1); // 储物仓类型 -> 0:不过滤 9:存在过滤器
+            const filtersOffset = storageType === 9 ? gridNum : 0; // 存在过滤器时增加偏移量gridNum
+            return baseOffset + filtersOffset + pos;
+        }
     };
-    {
-        const { base, stride } = StationParamsMeta.storage;
-        for (let i = 0; i < desc.maxItemKind; i++) {
-            result.storage.push({ // 运输站物品栏位
-                itemId: ParamOpt.of(base + i * stride + 0), // 物品id
-                localRole: ParamOpt.of(base + i * stride + 1), // 本地供需配置 -> 0:本地仓储 1:本地供应 2:本地需求
-                remoteRole: ParamOpt.of(base + i * stride + 2), // 星际供需配置 -> 0:星际仓储 1:星际供应 2:星际需求
-                max: ParamOpt.of(base + i * stride + 3), // 物品上限
-                lockAmount: BoolParamOpt.of(base + i * stride + 4, 1, 0), // 锁定数量 Boolean_1_0
-            });
-        }
+    // 战斗无人机组
+    const fighters = [];
+    const fightersNum = 12;
+    for (let i = 0; i < fightersNum; i++) {
+        fighters.push(ParamOpt.of(getPos(7 + i))); // 无人机物品id
     }
-    {
-        const { base, stride } = StationParamsMeta.slots;
-        for (let i = 0; i < desc.numSlots; i++) {
-            result.slots.push({ // 传送带接口
-                dir: ParamOpt.of(base + i * stride + 0), // 传送带接入方向 -> 0:未接入 1:输出 2:输入
-                storageIdx: ParamOpt.of(base + i * stride + 1), // 输出货物对应物品栏索引 -> 0:不输出 1-5:物品栏索引 6:翘曲器
-            });
-        }
-    }
-    return result;
-}
+    return new ParamParser(110, {
+        bans: ParamOpt.of(0), // 限制不可自动放入的格子数
+        storageType: ParamOpt.of(1), // 储物仓类型 -> 0:不过滤 9:存在过滤器
+        filters: storageFilters, // 储物仓物品过滤器
+        workEnergyPerTick: FunParamOpt.of(getPos(0), workEnergyPerTickEncode, workEnergyPerTickDecode), // 最大充能功率(单位：MW) -> 30-300
+        autoPickEnabled: BoolParamOpt.of(getPos(1), 1, 0), // 是否自动拾取 Boolean_1_0
+        autoReplenishFleet: BoolParamOpt.of(getPos(2), 1, 0), // 是否自动补充编队 Boolean_1_0
+        moduleEnabled: BoolParamOpt.of(getPos(3), 1, 0), // 是否开启战斗无人机 Boolean_1_0
+        autoReconstruct: BoolParamOpt.of(getPos(4), 1, 0), // 是否自动标记重建 Boolean_1_0
+        droneEnabled: BoolParamOpt.of(getPos(5), 1, 0), // 是否开启建设无人机 Boolean_1_0
+        dronesPriority: ParamOpt.of(getPos(6)), // 建设无人机模式 -> 0:优先修理 1:均衡模式 2:优先建造
+        fighters: fighters, // 战斗无人机编队
+    });
+})();
 
-// 行星内物流运输站 ParamParser
-export const logisticStationParamParser = new ParamParser(StationParamsMeta.size, getStationParamsOptions({
-    maxItemKind: 4,
-    numSlots: 12,
-}));
-
-// 星际物流运输站 ParamParser
-export const interstellarStationParamParser = new ParamParser(StationParamsMeta.size, getStationParamsOptions({
-    maxItemKind: 5,
-    numSlots: 12,
-}));
-
-// 大型采矿机 ParamParser
-export const advancedMiningMachineParamParser = new ParamParser(StationParamsMeta.size, getStationParamsOptions({
-    maxItemKind: 1,
-    numSlots: 9,
-}));
-
-const splitterPriority = [];
-for (let i = 0; i < 4; i++) {
-    splitterPriority[i] = BoolParamOpt.of(i, 1, 0); // 四向接口是否优先 Boolean_1_0
-}
 // 四向分流器 ParamParser
-export const splitterParamParser = new ParamParser(6, {
-    priority: splitterPriority,
-});
+export const splitterParamParser = (() => {
+    const splitterPriority = [];
+    for (let i = 0; i < 4; i++) {
+        splitterPriority[i] = BoolParamOpt.of(i, 1, 0); // 是否优先接口 Boolean_1_0
+    }
+    return new ParamParser(6, {
+        priority: splitterPriority, // 四向四个接口的优先级
+    })
+})();
 
 // 矩阵研究站 ParamParser
 export const labParamParser = new ParamParser(2, {
@@ -160,11 +201,6 @@ export const inserterParamParser = new ParamParser(1, {
 export const tankParamParser = new ParamParser(2, {
     output: BoolParamOpt.of(0), // 是否输出 Boolean
     input: BoolParamOpt.of(1), // 是否输入 Boolean
-});
-
-// 储物仓 ParamParser
-export const storageParamParser = new ParamParser(1, {
-    automationLimit: ParamOpt.of(0), // 限制不可自动放入的格子数
 });
 
 // 电磁轨道弹射器 ParamParser
@@ -207,21 +243,43 @@ export const MonitorParamParser = new ParamParser(128, {
     alarmMode: ParamOpt.of(12), // 声音警报模式 -> 0:无 1:未满足条件 2:满足条件 3:有货物响 4:无货物响 5:未满足且有货物 6:未满足且无货物
     tone: ParamOpt.of(7), // 声音警报-音色 -> 20-24:警报 1-2:钢琴 3-4:贝斯 5-6:风琴 7-9:铺底 10:铜管乐 11:梦铃 12:玻璃 13:吉他 14:音乐盒 15:电子琴 16:小号 17:小提琴 18:低音贝斯 19:鼓
     falloffRadius: [ // 声音警报-声音衰减范围
-        FunParamOpt.of(18, (pv) => pv * 10, (ov) => ov / 10), // 开始衰减距离(单位：米) -> 默认为 衰减为0距离/3（0-133）
-        FunParamOpt.of(19, (pv) => pv * 10, (ov) => ov / 10), // 衰减为0距离(单位：米) -> 1-400
+        FunParamOpt.of(18, (pVal) => pVal * 10, (oVal) => oVal / 10), // 开始衰减距离(单位：米) -> 默认为 衰减为0距离/3（0-133）
+        FunParamOpt.of(19, (pVal) => pVal * 10, (oVal) => oVal / 10), // 衰减为0距离(单位：米) -> 1-400
     ],
     repeat: BoolParamOpt.of(11, 1, 0), // 声音警报-是否循环 Boolean_1_0
     pitch: ParamOpt.of(9), // 声音警报-音阶 -> 例：25:C2 26:C#2 27:D2 ...
     volume: ParamOpt.of(8), // 声音警报-音量 -> 0-100
-    length: FunParamOpt.of(13, (pv) => pv * 10000, (ov) => ov / 10000), // 声音警报-时长(只有音色为警报时有该参数) -> 0.1-20
+    length: FunParamOpt.of(13, (pVal) => pVal * 10000, (oVal) => oVal / 10000), // 声音警报-时长(只有音色为警报时有该参数) -> 0.1-20
 });
 
 // 物流配送器 ParamParser
-export const distributorParser = new ParamParser(128, {
-    fromMyselfMode: ParamOpt.of(0), // 机甲供需模式 -> 1:从伊卡洛斯回收 2:向伊卡洛斯供应和回收 3:向伊卡洛斯供应
-    fromOtherMode: ParamOpt.of(1), // 配送器间模式 -> 0:不勾选 1:向其他配送器供应 2:向其他配送器需求
+export const dispenserParamParser = new ParamParser(128, {
+    playerMode: ParamOpt.of(0), // 机甲供需模式 -> 1:从伊卡洛斯回收 2:向伊卡洛斯供应和回收 3:向伊卡洛斯供应
+    storageMode: ParamOpt.of(1), // 配送器间模式 -> 0:不勾选 1:向其他配送器供应 2:向其他配送器需求
     workEnergyPerTick: FunParamOpt.of(2, workEnergyPerTickEncode, workEnergyPerTickDecode), // 最大充能功率(单位：MW) -> 0.9-9
-    autoFill: BoolParamOpt.of(3, 1, 0), // 是否自动补充运输单位 Boolean_1_0
+    courierAutoReplenish: BoolParamOpt.of(3, 1, 0), // 是否自动补充运输单位 Boolean_1_0
+});
+
+// 炮台类建筑 ParamParser
+export const turretParamParser = new ParamParser(128, {
+    group: ParamOpt.of(1), // 分组编号 -> 0:不分组 1-5:分组
+    vsSettings: FunParamOpt.of(2, (pVal) => {
+        if (!pVal) return 0;
+        return (pVal[0] << 0) + (pVal[1] << 2) + (pVal[2] << 4) + (pVal[3] << 6)
+    }, (oVal) => {
+        // 使用8位二进制数代表4个开关分别4种状态
+        // 0:关闭
+        // 1:地面低优先 2:地面均衡 3:地面高优先 01 10 11
+        // 4:低空低优先 8:低空均衡 12:低空高优先 0100 1000 1100
+        // 16:高空低优先 32:高空均衡 48:高空高优先 010000 100000 110000
+        // 64:太空低优先 128:太空均衡 192:太空高优先 01000000 10000000 11000000
+        return [
+            oVal & 3, // 地面优先级 -> 0:关闭 1:低优先 2:均衡 3:高优先
+            oVal >> 2 & 3, // 低空优先级 -> 0:关闭 1:低优先 2:均衡 3:高优先
+            oVal >> 4 & 3, // 高空优先级 -> 0:关闭 1:低优先 2:均衡 3:高优先
+            oVal >> 6 & 3, // 太空优先级 -> 0:关闭 1:低优先 2:均衡 3:高优先
+        ]
+    }), // 攻击设置优先级
 });
 
 // 默认 ParamParser

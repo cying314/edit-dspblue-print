@@ -8,7 +8,9 @@ export default class DefaultParamParser {
      * @param {Object} p 建筑参数
      */
     getLength(p) {
-        if (p._defaultParams) {
+        if (p._defaultParams instanceof Int32Array) {
+            return p._defaultParams.length;
+        } if (p._defaultParams) {
             return Object.keys(p._defaultParams).length;
         } else {
             return 0;
@@ -19,7 +21,7 @@ export default class DefaultParamParser {
      * @param {DataView} v 
      */
     encode(p, v) {
-        for (let i = 0; i < p._defaultParams.length; i++) {
+        for (let i = 0; i < this.getLength(p); i++) {
             setParam(v, i, p._defaultParams[i]);
         }
     }

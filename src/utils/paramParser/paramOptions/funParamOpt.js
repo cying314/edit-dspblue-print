@@ -4,7 +4,7 @@ import ParamOpt from "./paramOpt";
  */
 export default class FunParamOpt extends ParamOpt {
     /**
-     * @param {Number} pos 参数相对位置（在DataView中的字节偏移量/4）
+     * @param {Number | Function} pos 参数相对位置（在DataView中的字节偏移量/4）
      * @param {Function} encode 编码转换方法（对象值->原始值）
      * @param {Function} decode 解码转换方法（原始值->对象值）
      */
@@ -14,7 +14,7 @@ export default class FunParamOpt extends ParamOpt {
         this.decode = decode;
     }
     /**
-     * @param {Number} pos 参数相对位置（在DataView中的字节偏移量/4）
+     * @param {Number | Function} pos 参数相对位置（在DataView中的字节偏移量/4）
      * @param {Function} encode 编码转换方法（对象值->原始值）
      * @param {Function} decode 解码转换方法（原始值->对象值）
      */
@@ -27,13 +27,13 @@ export default class FunParamOpt extends ParamOpt {
      */
     setParam(v, value) {
         // 编码转为原始值
-        super.setParam(v, this.encode(value));
+        super.setParam(v, this.encode(value, v));
     }
     /**
      * @param {DataView} v 
      */
     getParam(v) {
         // 解码转换
-        return this.decode(super.getParam(v));
+        return this.decode(super.getParam(v), v);
     }
 }

@@ -4,7 +4,7 @@ import ParamOpt from "./paramOpt";
  */
 export default class EnumParamOpt extends ParamOpt {
     /**
-     * @param {Number} pos 参数相对位置（在DataView中的字节偏移量/4）
+     * @param {Number | Function} pos 参数相对位置（在DataView中的字节偏移量/4）
      * @param {Map} enumMap 枚举Map
      */
     constructor(pos, enumMap) {
@@ -12,7 +12,7 @@ export default class EnumParamOpt extends ParamOpt {
         this.enumMap = enumMap;
     }
     /**
-     * @param {Number} pos 参数相对位置（在DataView中的字节偏移量/4）
+     * @param {Number | Function} pos 参数相对位置（在DataView中的字节偏移量/4）
      * @param {Map} enumMap 枚举Map
      */
     static of(pos, enumMap) {

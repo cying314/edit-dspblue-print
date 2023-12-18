@@ -949,7 +949,14 @@ export default {
       if (obj === null || typeof obj !== "object") {
         return obj;
       }
-      var clone = Array.isArray(obj) ? [] : {};
+      var clone;
+      if (obj instanceof Int32Array) {
+        clone = new Int32Array(obj.length);
+      } else if (Array.isArray(obj)) {
+        clone = [];
+      } else {
+        clone = {};
+      }
       for (var key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
           clone[key] = this.deepCopy(obj[key]);
@@ -1437,7 +1444,7 @@ export default {
               _slots = v.parameters.priority;
             }
             if (itemsUtil.isStation(v.itemId) && v.parameters.slots) {
-              // 运输站类建筑传送带接口参数
+              // 运输站类建筑传送带插槽参数
               _slots = v.parameters.slots;
             }
 
