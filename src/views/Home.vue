@@ -2070,7 +2070,7 @@ export default {
       }
       .progress {
         margin-top: 50px;
-        /deep/.el-progress-bar__outer {
+        ::v-deep .el-progress-bar__outer {
           width: 60vw;
           .el-progress-bar__inner {
             transition: unset;
@@ -2099,14 +2099,14 @@ export default {
       height: 0;
       flex: 1;
       .scrollContent {
-        /deep/.el-scrollbar__wrap {
+        ::v-deep .el-scrollbar__wrap {
           margin-bottom: 0 !important;
           margin-right: 0 !important;
           &::-webkit-scrollbar {
             display: none;
           }
         }
-        /deep/.el-card__header {
+        ::v-deep .el-card__header {
           line-height: 32px;
           padding: 12px 20px;
           // min-width: 330px;
@@ -2128,14 +2128,14 @@ export default {
         }
         .el-form {
           // min-width: 330px;
-          /deep/.el-form-item__error {
+          ::v-deep .el-form-item__error {
             position: unset;
           }
-          /deep/ .el-collapse-item__header {
+          ::v-deep .el-collapse-item__header {
             font-size: 14px;
             color: #606266;
           }
-          /deep/ .el-collapse-item__content {
+          ::v-deep .el-collapse-item__content {
             font-size: 14px;
             text-indent: 2em;
             color: #606266;
@@ -2165,11 +2165,11 @@ export default {
           }
         }
         .el-tree {
-          /deep/.el-tree-node {
+          ::v-deep .el-tree-node {
             white-space: pre-wrap;
             word-break: break-all;
           }
-          /deep/.el-tree-node__content {
+          ::v-deep .el-tree-node__content {
             height: auto;
           }
         }
