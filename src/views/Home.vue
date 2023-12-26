@@ -34,7 +34,7 @@
                     :accept="formInline.dataType=='blueprint'?'.txt':formInline.dataType=='json'?'.txt,.json':'.txt,.json'"
                     :on-change="uploadChange_batchConvert"
                   >
-                    <el-button plain size="small" slot="trigger" icon="el-icon-sort">批量转换{{formInline.dataType=='blueprint'?'蓝图':formInline.dataType=='json'?'JSON':''}}文件</el-button>
+                    <el-button plain size="small" slot="trigger" icon="el-icon-sort">批量转换{{formInline.dataType=='blueprint'?'蓝图为JSON':formInline.dataType=='json'?'JSON为蓝图':''}}文件</el-button>
                   </el-upload>
                   <el-upload
                     action
@@ -604,7 +604,6 @@
 
 <script>
 import * as PARSER from "@/utils/parser";
-import { items as itemsData } from "@/data/itemsData";
 import * as itemsUtil from "@/utils/itemsUtil";
 import { saveAs } from "file-saver";
 export default {
@@ -1003,17 +1002,17 @@ export default {
     },
     getItemList(blueprintData) {
       if (!blueprintData || !blueprintData.buildings) return [];
-      let tmpObj = {};
+      let itemsCount = {};
       blueprintData.buildings.forEach((v) => {
-        tmpObj[v.itemId] = (tmpObj[v.itemId] || 0) + 1;
+        itemsCount[v.itemId] = (itemsCount[v.itemId] || 0) + 1;
       });
-      let itemList = Object.keys(tmpObj).map((k) => {
-        let itemInfo = itemsData.find((item) => item.id == k);
+      let itemList = Object.keys(itemsCount).map((itemId) => {
+        const itemInfo = itemsUtil.itemsMap.get(+itemId);
         return {
-          itemId: k,
-          count: tmpObj[k],
+          itemId: itemId,
+          count: itemsCount[itemId],
           icon: itemInfo?.icon,
-          name: itemInfo?.name || `未知物品_${k}`,
+          name: itemInfo?.name || `未知物品_${itemId}`,
         };
       });
       return itemList;
@@ -1088,7 +1087,7 @@ export default {
       this.NBM_failMap = []; // 未匹配上的分拣器端口
       this.NBM_successNum = 0;
       let addFail = (filterId, itemId, type) => {
-        let filterName = itemsData.find((d) => d.id == filterId)?.name || `未知物品_${filterId}`;
+        let filterName = itemsUtil.itemsMap.get(filterId)?.name || `未知物品_${filterId}`;
         let itemName =
           itemId == 2011
             ? "分拣器(黄爪)"
