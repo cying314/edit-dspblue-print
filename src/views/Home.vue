@@ -446,23 +446,13 @@
                         </el-tooltip>
                       </template>
                       <el-radio-group v-model="formInline.params.outputCountMode">
-                        <el-radio label="none">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>原来输入什么数就输出什么数</p>
-                            </template>
-                            <span>
-                              原标记数
-                              <i class="el-icon-question"></i>
-                            </span>
-                          </el-tooltip>
-                        </el-radio>
-                        <el-radio label="speed">最终匹配的分拣器速度</el-radio>
-                        <el-radio label="num">最终匹配的分拣器数量</el-radio>
+                        <el-radio label="none">原标记数</el-radio>
+                        <el-radio label="speed">匹配分拣器速度</el-radio>
+                        <el-radio label="num">匹配分拣器数量</el-radio>
                         <el-radio label="clear">
                           <el-tooltip class="item" effect="dark" placement="top">
                             <template slot="content">
-                              <p>*只清除匹配上的传送带标记</p>
+                              <p>*只清除匹配上的传送带图标及标记数</p>
                               <p>清除所有请到“默认转换”功能输出</p>
                             </template>
                             <span>
@@ -552,6 +542,7 @@
                 </div>
               </div>
               <div class="card_content">
+                <div class="resConfigMsg" v-if="formInline.resConfigMsg">当前输出配置：{{formInline.resConfigMsg}}</div>
                 <el-form :model="formInline" @submit.native.prevent>
                   <el-form-item>
                     <el-radio-group v-model="formInline.resType">
@@ -661,6 +652,7 @@ export default {
           addBase: false,
         },
         resBlueprintData: null,
+        resConfigMsg: null,
         resType: "blueprint",
         resData: "",
         resJSON: "",
@@ -1040,6 +1032,9 @@ export default {
     deepCopy(obj) {
       if (obj === null || typeof obj !== "object") {
         return obj;
+      }
+      if (obj instanceof Date) {
+        return new Date(obj);
       }
       var clone;
       if (obj instanceof Int32Array) {
@@ -1751,88 +1746,116 @@ export default {
             return;
           }
           let res;
+          let msg = "";
+          const params = this.formInline.params;
           switch (this.formInline.paramType) {
             case "默认转换":
-              if (this.formInline.params.addBase) {
+              msg += "[默认转换]";
+              if (params.addBase) {
                 // 悬空建筑增加地基
+                msg += " | 悬空建筑增加地基";
                 res = this.verticalOffset(this.formInline.blueprintData, 0); // 深拷贝，并处理悬空建筑
               } else {
                 res = this.deepCopy(this.formInline.blueprintData); // 深拷贝
               }
-              if (this.formInline.params.clearBelt || this.formInline.params.clearInserter) {
+              if (params.clearBelt || params.clearInserter) {
                 // 清空标记
-                res = this.clearIcon(
-                  res,
-                  this.formInline.params.clearBelt,
-                  this.formInline.params.clearInserter
-                );
+                if (params.clearBelt) {
+                  msg += " | 清空传送带图标";
+                }
+                if (params.clearInserter) {
+                  msg += " | 清空分拣器过滤";
+                }
+                res = this.clearIcon(res, params.clearBelt, params.clearInserter);
               }
               break;
             case "垂直叠加":
+              msg = `[垂直叠加] | 层数:${+params.floors} | 间隔:${+params.spacing} | 各层关系:${
+                params.isPile ? "堆叠" : "独立"
+              }`;
               res = this.verticalCopy(
                 this.formInline.blueprintData,
-                +this.formInline.params.floors,
-                +this.formInline.params.spacing,
-                this.formInline.params.isPile
+                +params.floors,
+                +params.spacing,
+                params.isPile
               );
               break;
             case "坐标偏移":
-              if (this.formInline.params.offsetType == "vertical") {
+              msg += "[坐标偏移]";
+              if (params.offsetType == "vertical") {
                 // 垂直偏移
-                res = this.verticalOffset(
-                  this.formInline.blueprintData,
-                  +this.formInline.params.offsetZ
-                );
-              } else if (this.formInline.params.offsetType == "horizontal") {
+                msg += ` | 垂直偏移:${+params.offsetZ}`;
+                res = this.verticalOffset(this.formInline.blueprintData, +params.offsetZ);
+              } else if (params.offsetType == "horizontal") {
                 // 水平偏移
+                msg += ` | 水平偏移:${+params.offsetX}, ${+params.offsetY}`;
                 res = this.horizontalOffset(
                   this.formInline.blueprintData,
-                  +this.formInline.params.offsetX,
-                  +this.formInline.params.offsetY
+                  +params.offsetX,
+                  +params.offsetY
                 );
               }
               break;
             case "水平翻转":
-              if (this.formInline.params.overturnType == "x") {
+              msg += "[水平翻转]";
+              if (params.overturnType == "x") {
                 // 横向翻转
+                msg += " | 横向翻转";
                 res = this.linearTransformation(this.formInline.blueprintData, -1, 1, 0);
-              } else if (this.formInline.params.overturnType == "y") {
+              } else if (params.overturnType == "y") {
                 // 纵向翻转
+                msg += " | 纵向翻转";
                 res = this.linearTransformation(this.formInline.blueprintData, 1, -1, 0);
               }
               break;
             case "线性变换":
+              msg = `[线性变换] | 横向放缩:${+params.zoomX} | 纵向放缩:${+params.zoomY} | 旋转:${+params.rotate}°`;
               res = this.linearTransformation(
                 this.formInline.blueprintData,
-                +this.formInline.params.zoomX,
-                +this.formInline.params.zoomY,
-                +this.formInline.params.rotate
+                +params.zoomX,
+                +params.zoomY,
+                +params.rotate
               );
               break;
             case "无中生有":
-              switch (this.formInline.params.createType) {
+              msg += "[无中生有]";
+              switch (params.createType) {
                 case "0":
                   // 无褶皱垂直传送带
-                  res = this.createVbelt(
-                    this.formInline.params.startZ,
-                    this.formInline.params.endZ
-                  );
+                  msg += ` | 无褶皱垂直传送带 | 起点:${params.startZ} | 终点:${params.endZ}`;
+                  res = this.createVbelt(params.startZ, params.endZ);
                   break;
                 case "1":
                   // 虫洞分拣器
+                  msg += ` | 虫洞分拣器 | 起点X:${+params.startPoint.X}, Y:${+params.startPoint
+                    .Y}, Z:${+params.startPoint.Z} | 终点X:${+params.endPoint.X}, Y:${+params
+                    .endPoint.Y}, Z:${+params.endPoint.Z} | 分拣器方向:${new Map([
+                    ["left", "向左"],
+                    ["right", "向右"],
+                    ["top", "向上"],
+                    ["bottom", "向下"],
+                  ]).get(params.WinserterDir)}`;
                   res = this.createWinserter(
-                    this.formInline.params.startPoint,
-                    this.formInline.params.endPoint,
-                    this.formInline.params.WinserterDir
+                    params.startPoint,
+                    params.endPoint,
+                    params.WinserterDir
                   );
                   break;
               }
               break;
             case "无带流":
+              msg = `[无带流] | ${
+                params.negativeMode == "7" ? "7代替负号" : "仍输入负数"
+              } | ${new Map([
+                ["none", "输出原标记数"],
+                ["speed", "输出匹配分拣器速度"],
+                ["num", "输出匹配分拣器数量"],
+                ["clear", "清除标记"],
+              ]).get(params.outputCountMode)}`;
               res = this.noBeltMethod(
                 this.formInline.blueprintData,
-                this.formInline.params.outputCountMode,
-                this.formInline.params.negativeMode
+                params.outputCountMode,
+                params.negativeMode
               );
               break;
             default:
@@ -1840,6 +1863,7 @@ export default {
               return;
           }
           this.formInline.resBlueprintData = res;
+          this.formInline.resConfigMsg = msg;
           console.log(this.formInline.resBlueprintData);
           this.success("输出成功！");
           this.$set(this.formInline, "resData", PARSER.toStr(this.formInline.resBlueprintData));
@@ -2254,6 +2278,11 @@ export default {
         text-shadow: 0 0 2px #000;
       }
     }
+  }
+  .resConfigMsg {
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #636363;
   }
   .testNumWrap {
     display: inline-block;
