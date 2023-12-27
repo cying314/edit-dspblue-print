@@ -93,6 +93,7 @@
 | yaw                | Array(2)                |                       | 建筑物旋转角度（单位：角度）    |
 | -	*_array_item* | Number                  | 4                     |                                 |
 | itemId             | Number                  | 2                     | 建筑id                          |
+| itemName           | String                  | -                     | 建筑名称                        |
 | modelIndex         | Number                  | 2                     | 模型id                          |
 | outputObjIdx       | Number                  | 4                     | 输出端目标建筑索引              |
 | inputObjIdx        | Number                  | 4                     | 输入端目标建筑索引              |

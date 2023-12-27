@@ -73,7 +73,7 @@ export function getStationParamsParser(maxItemKind, numSlots) {
     // 传送带插槽参数
     const slots = [];
     offset = 192; // 插槽参数偏移量
-    const slotsStride = 6; // 物品栏参数 每行长度 
+    const slotsStride = 4; // 物品栏参数 每行长度 
     for (i = 0; i < numSlots; i++) {
         slots.push({
             dir: ParamOpt.of(offset + i * slotsStride + 0), // 传送带接入方向 -> 0:未接入 1:输出 2:输入

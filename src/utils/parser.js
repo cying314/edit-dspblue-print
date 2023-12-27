@@ -1,6 +1,7 @@
 import pako from 'pako';
 import { digest } from './md5';
 import { getParamParser } from '@/utils/paramParser/paramParserFactory';
+import { itemsMap } from "@/utils/itemsUtil";
 
 class BufferIO {
     view;
@@ -82,18 +83,22 @@ function exportArea(w, area) {
 }
 
 function importBuilding(r) {
+    function fix(num) {
+        // 保留4位小数
+        return +num?.toFixed(4) || 0;
+    }
     function readXYZ() {
         return {
-            x: r.getFloat32(),
-            y: r.getFloat32(),
-            z: r.getFloat32(),
+            x: fix(r.getFloat32()),
+            y: fix(r.getFloat32()),
+            z: fix(r.getFloat32()),
         };
     }
     const b = {
         index: r.getInt32(),
         areaIndex: r.getInt8(),
         localOffset: [readXYZ(), readXYZ()],
-        yaw: [r.getFloat32(), r.getFloat32()],
+        yaw: [fix(r.getFloat32()), fix(r.getFloat32())],
         itemId: r.getInt16(),
         modelIndex: r.getInt16(),
         outputObjIdx: r.getInt32(),
@@ -108,6 +113,7 @@ function importBuilding(r) {
         filterId: r.getInt16(),
         parameters: null,
     };
+    b.itemName = itemsMap.get(b.itemId)?.name || `未知物品_${b.itemId}`;
     const length = r.getInt16();
     if (length > 0) {
         const v = r.getView(length * Int32Array.BYTES_PER_ELEMENT);

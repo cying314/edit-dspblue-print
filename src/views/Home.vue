@@ -14,7 +14,7 @@
               <span slot="title">联系作者</span>
             </el-menu-item>
             <el-menu-item index="查看更新">
-              <span slot="title">查看更新(当前版本：v5.1)</span>
+              <span slot="title">查看更新(当前版本：v5.2)</span>
             </el-menu-item>
           </el-menu>
         </el-scrollbar>
