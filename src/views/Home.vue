@@ -14,7 +14,7 @@
               <span slot="title">联系作者</span>
             </el-menu-item>
             <el-menu-item index="查看更新">
-              <span slot="title">查看更新(当前版本：v5.2)</span>
+              <span slot="title">查看更新(当前版本：v5.3)</span>
             </el-menu-item>
           </el-menu>
         </el-scrollbar>
@@ -108,8 +108,8 @@
                         无带流
                         <el-tooltip class="item" effect="dark" placement="top">
                           <template slot="content">
-                            <p>p.s.无带流在2023/01/05的更新中被官方修复了，修复后之前的无带建筑不影响使用，但是无法再用蓝图直接粘贴无带</p>
-                            <p>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可修复失效端</p>
+                            <p>p.s.无带流在2023/01/05的官方更新后，直接粘贴无带蓝图将出现分拣器输入输出端失效</p>
+                            <p>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端</p>
                           </template>
                           <span>
                             <i class="el-icon-question"></i>
@@ -350,8 +350,8 @@
                                 <p>可实现超远距离无带传输的分拣器</p>
                                 <p>生成的传送带两端将会有随机编码对应，可直接用传送带连接端点使用</p>
                                 <br />
-                                <p>p.s.无带流在2023/01/05的更新中被官方修复了，修复后之前的无带建筑不影响使用，但是无法再用蓝图直接粘贴无带</p>
-                                <p>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可修复失效端</p>
+                                <p>p.s.无带流在2023/01/05的官方更新后，直接粘贴无带蓝图将出现分拣器输入输出端失效</p>
+                                <p>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端</p>
                               </template>
                               <span>
                                 虫洞分拣器
@@ -480,7 +480,10 @@
                             <b>步骤③、</b>给需要对接的传送带节点打上物品A的图标，并在图标下输入标记数（正数匹配输出端；负数匹配输入端）；
                           </div>
                           <div class="line">
-                            <b>步骤④、</b>将传送带节点和分拣器（连带着建筑）复制进蓝图工具，使用“无带流”一键输出即可。
+                            <b>步骤④、</b>将传送带节点和分拣器（连带着建筑）复制进蓝图工具，使用“无带流”一键输出；
+                          </div>
+                          <div class="line">
+                            <b>步骤⑤、</b>粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端。
                           </div>
                         </el-collapse-item>
                         <el-collapse-item>
@@ -506,7 +509,7 @@
                               <b>数值</b>用于控制可接入的
                               <b>分拣器总速度上限</b>。
                             </div>
-                            <div>（分拣器速度计算长度影响，长度1格时速度为：蓝6/绿3/黄1.5，具体看游戏内分拣器属性）</div>
+                            <div>（分拣器速度计算长度影响，长度1格时速度为：白30/蓝6/绿3/黄1.5，具体看游戏内分拣器属性，白爪以30计）</div>
                             <div>【如：“-30”可匹配5个蓝爪的输入端——从带上取走，“9”可匹配1个蓝爪+1个绿爪的输出端——往带上放置】</div>
                           </div>
                           <div class="line">
@@ -520,6 +523,10 @@
                           </div>
                           <div class="line" style="color: red">
                             <b>要点⑦、</b>*蓝图每次复制后负数标记数会+1，因此粘贴进工具的蓝图会默认-1修正。（官方BUG）
+                          </div>
+                          <div class="line" style="color: red">
+                            <b>要点⑧、</b>*无带流在2023/01/05的官方更新后，直接粘贴无带蓝图将出现分拣器输入输出端失效
+                            <div>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端</div>
                           </div>
                         </el-collapse-item>
                       </el-collapse>
@@ -1088,12 +1095,8 @@ export default {
       this.NBM_successNum = 0;
       let addFail = (filterId, itemId, type) => {
         let filterName = itemsUtil.itemsMap.get(filterId)?.name || `未知物品_${filterId}`;
-        let itemName =
-          itemId == 2011
-            ? "分拣器(黄爪)"
-            : itemId == 2012
-            ? "高速分拣器(绿爪)"
-            : "极速分拣器(蓝爪)";
+        const inserterItem = itemsUtil.itemsMap.get(itemId);
+        let itemName = `${inserterItem.name}(${inserterItem.alias})`;
         let item1 = this.NBM_failMap.find((item) => item.label == filterName);
         if (!item1) {
           item1 = {
@@ -1161,8 +1164,7 @@ export default {
 
       // 计算已链接在传送带上的分拣器数量和速度
       inserterList.forEach((v) => {
-        var Speed = v.itemId == 2011 ? 1.5 : v.itemId == 2012 ? 3 : 6;
-        Speed /= v.parameters.length || 1; // 计入分拣器长度
+        var Speed = itemsUtil.getInserterSpeed(v.itemId, v.parameters.length);
 
         // 输出端不为空 且为 Map中的传送带
         if (v.outputObjIdx != -1 && beltMap[v.outputObjIdx]) {
@@ -1180,8 +1182,7 @@ export default {
       });
 
       inserterList.forEach((v) => {
-        var Speed = v.itemId == 2011 ? 1.5 : v.itemId == 2012 ? 3 : 6;
-        Speed /= v.parameters.length || 1; // 计入分拣器长度
+        var Speed = itemsUtil.getInserterSpeed(v.itemId, v.parameters.length);
 
         // 带过滤条件的失效 输出端
         if (v.filterId && v.outputObjIdx == -1) {
