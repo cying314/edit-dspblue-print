@@ -1574,6 +1574,8 @@ export default {
             v.localOffset[0].y += offsetY * Math.cos((v.yaw[0] * Math.PI) / 180);
             v.localOffset[1].y += offsetY * Math.cos((v.yaw[1] * Math.PI) / 180);
           } else if (itemsUtil.isBelt(v.itemId)) {
+            // 翻转传送带倾斜角度
+            v.tilt = -v.tilt;
             // 传送带 调换接到建筑上的插槽索引
             if (beltSlotBuildIndexs.has(v.inputObjIdx)) {
               // 输入端
