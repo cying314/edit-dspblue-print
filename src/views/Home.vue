@@ -135,6 +135,7 @@
                         </el-checkbox>
                         <el-checkbox v-model="formInline.params.clearBelt">清空传送带图标</el-checkbox>
                         <el-checkbox v-model="formInline.params.clearInserter">清空分拣器过滤</el-checkbox>
+                        <el-checkbox v-model="formInline.params.stationUnlockAmount">关闭沙盒模式物流塔槽位锁</el-checkbox>
                       </el-form-item>
                     </div>
                   </template>
@@ -655,6 +656,7 @@ export default {
           testNum: "7999",
           clearBelt: false,
           clearInserter: false,
+          stationUnlockAmount: false,
           addBase: false,
         },
         resBlueprintData: null,
@@ -927,7 +929,6 @@ export default {
         }
         this.$set(this.formInline, "dataType", "blueprint");
         this.$set(this.formInline, "inputData", this.formInline.resData);
-        this.render();
       } else if (this.formInline.resType == "json") {
         if (!this.formInline.resJSON) {
           this.warning("请先生成数据");
@@ -936,6 +937,15 @@ export default {
         this.$set(this.formInline, "dataType", "json");
         this.$set(this.formInline, "inputData", this.formInline.resJSON);
         this.formInline.dataType = "json";
+      } else {
+        return;
+      }
+      if (this.formInline.paramType == "无中生有") {
+        this.$set(this.formInline, "paramType", "默认转换");
+        this.$nextTick(() => {
+          this.render();
+        });
+      } else {
         this.render();
       }
     },
@@ -1056,6 +1066,17 @@ export default {
         }
       }
       return clone;
+    },
+    handleStationUnlockAmount(blueprintData) {
+      blueprintData.buildings.forEach((v) => {
+        if (itemsUtil.isStation(v.itemId)) {
+          // 运输站类建筑
+          v.parameters.storage?.forEach((s) => {
+            s.lockAmount = 0;
+          });
+        }
+      });
+      return blueprintData;
     },
     clearIcon(blueprintData, clearBelt, clearInserter) {
       // 清空标记
@@ -1772,6 +1793,10 @@ export default {
                   msg += " | 清空分拣器过滤";
                 }
                 res = this.clearIcon(res, params.clearBelt, params.clearInserter);
+              }
+              if (params.stationUnlockAmount) {
+                msg += " | 关闭沙盒模式物流塔槽位锁";
+                res = this.handleStationUnlockAmount(res);
               }
               break;
             case "垂直叠加":

@@ -225,7 +225,7 @@
 | -	-	-	localRole    | Number              | *_L* + 1            | 1           | 本地供需配置<br />-> 0:本地仓储 1:本地供应 2:本地需求        |
 | -	-	-	remoteRole   | Number              | *_L* + 2            | 1           | 星际供需配置<br />-> 0:星际仓储 1:星际供应 2:星际需求        |
 | -	-	-	max          | Number              | *_L* + 3            | 1           | 物品上限                                                     |
-| -	-	-	lockAmount   | Boolean             | *_L* + 4            | 1           | 是否锁定数量                                                 |
+| -	-	-	lockAmount   | Number              | *_L* + 4            | 1           | 是否锁定数量<br />-> 0:不锁定 1:锁定满仓 2:锁定半仓          |
 | -	slots                  | Array(*slotsNum*)   | 192                 | 320         | 传送带插槽参数<br />*slotsNum*: 建筑传送带插槽数目           |
 | -	-	*_array_item*     | Object              | *_L* =192 + *i* * 4 | 4           |                                                              |
 | -	-	-	dir          | Number              | *_L* + 0            | 1           | 传送带接入方向<br />-> 0:未接入 1:输出 2:输入                |

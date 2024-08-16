@@ -66,7 +66,7 @@ export function getStationParamsParser(maxItemKind, numSlots) {
             localRole: ParamOpt.of(offset + i * storageStride + 1), // 本地供需配置 -> 0:本地仓储 1:本地供应 2:本地需求
             remoteRole: ParamOpt.of(offset + i * storageStride + 2), // 星际供需配置 -> 0:星际仓储 1:星际供应 2:星际需求
             max: ParamOpt.of(offset + i * storageStride + 3), // 物品上限
-            lockAmount: BoolParamOpt.of(offset + i * storageStride + 4, 1, 0), // 锁定数量 Boolean_1_0
+            lockAmount: ParamOpt.of(offset + i * storageStride + 4), // 锁定数量 -> 0:不锁定 1:锁定满仓 2:锁定半仓
         });
     }
 
