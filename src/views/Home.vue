@@ -1,590 +1,570 @@
 <template>
   <div class="main">
     <div class="wrap">
-      <div class="navScrollBar">
-        <el-scrollbar :vertical="false">
-          <el-menu :default-active="activeStep" @select="jump" mode="horizontal">
-            <el-menu-item v-for="(item, index) in menuData" :index="`${index}`" :key="index">
-              <span slot="title">{{ item.menuName }}</span>
-            </el-menu-item>
-            <el-menu-item index="数据字典">
-              <span slot="title">数据字典</span>
-            </el-menu-item>
-            <el-menu-item index="联系作者">
-              <span slot="title">联系作者</span>
-            </el-menu-item>
-            <el-menu-item index="查看更新">
-              <span slot="title">查看更新(当前版本：v5.4)</span>
-            </el-menu-item>
-          </el-menu>
-        </el-scrollbar>
-      </div>
-      <div class="scrollWrap">
-        <el-scrollbar class="scrollContent" :vertical="false" style="height: 100%">
-          <el-collapse style="padding-bottom: 20px">
-            <el-card name="1" v-if="formInline.paramType != '无中生有'">
-              <div slot="header" class="card_header">
-                <span class="title">导入蓝图</span>
-                <div class="btnWrap">
-                  <el-upload
-                    action
-                    :auto-upload="false"
-                    multiple
-                    :file-list="fileList"
-                    :accept="formInline.dataType=='blueprint'?'.txt':formInline.dataType=='json'?'.txt,.json':'.txt,.json'"
-                    :on-change="uploadChange_batchConvert"
-                  >
-                    <el-button plain size="small" slot="trigger" icon="el-icon-sort">批量转换{{formInline.dataType=='blueprint'?'蓝图为JSON':formInline.dataType=='json'?'JSON为蓝图':''}}文件</el-button>
-                  </el-upload>
-                  <el-upload
-                    action
-                    :auto-upload="false"
-                    :file-list="fileList"
-                    :accept="formInline.dataType=='blueprint'?'.txt':formInline.dataType=='json'?'.txt,.json':'.txt,.json'"
-                    :on-change="uploadChange_import"
-                  >
-                    <el-button
-                      style="margin-left: 10px;"
-                      plain
-                      size="small"
-                      slot="trigger"
-                      icon="el-icon-folder-opened"
-                    >导入{{formInline.dataType=='blueprint'?'蓝图':formInline.dataType=='json'?'JSON':''}}文件</el-button>
-                  </el-upload>
-                  <el-button style="margin-left: 10px;" type="primary" plain size="small" @click="inputFromClipboard" icon="el-icon-document-copy">粘贴</el-button>
-                  <template v-if="formInline.inputData.trim() && formInline.inputData.trim()!=formInline.importData">
-                    <el-divider direction="vertical"></el-divider>
-                    <el-button size="small" type="primary" @click="render">确定导入</el-button>
-                  </template>
+      <ScrollCard
+        :otherLinks="[
+        {name:'数据字典', url: 'https://gitee.com/cying314/edit-dspblue-print#蓝图数据字典'},
+        {name:'查看更新(当前版本：v5.5)', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
+      ]"
+      >
+        <template #navRight>
+          <div class="navRight">
+            <a class="item hover" href="https://github.com/cying314/edit-dspblue-print" target="_blank">
+              <img :src="require('@/assets/images/github.png')" />
+              <span style="width:40px">Github</span>
+            </a>
+            <a class="item hover" href="https://gitee.com/cying314/edit-dspblue-print" target="_blank">
+              <img :src="require('@/assets/images/gitee.png')" />
+              <span style="width:31px">Gitee</span>
+            </a>
+            <a class="item" href="https://space.bilibili.com/34117233" target="_blank" title="跳转作者B站主页">
+              <img :src="require('@/assets/images/bilibili.png')" />
+              <span>晨隐_</span>
+            </a>
+          </div>
+        </template>
+        <ScrollCardItem name="导入蓝图" v-if="formInline.paramType != '无中生有'">
+          <template #topRight>
+            <el-upload
+              style="display:inline-block"
+              action
+              :auto-upload="false"
+              multiple
+              :file-list="fileList"
+              :accept="formInline.dataType=='blueprint'?'.txt':formInline.dataType=='json'?'.txt,.json':'.txt,.json'"
+              :on-change="uploadChange_batchConvert"
+            >
+              <el-button plain size="small" slot="trigger" icon="el-icon-sort">批量转换{{formInline.dataType=='blueprint'?'蓝图为JSON':formInline.dataType=='json'?'JSON为蓝图':''}}文件</el-button>
+            </el-upload>
+            <el-upload
+              style="display:inline-block"
+              action
+              :auto-upload="false"
+              :file-list="fileList"
+              :accept="formInline.dataType=='blueprint'?'.txt':formInline.dataType=='json'?'.txt,.json':'.txt,.json'"
+              :on-change="uploadChange_import"
+            >
+              <el-button style="margin-left: 10px;" plain size="small" slot="trigger" icon="el-icon-folder-opened">导入{{formInline.dataType=='blueprint'?'蓝图':formInline.dataType=='json'?'JSON':''}}文件</el-button>
+            </el-upload>
+            <el-button style="margin-left: 10px;" type="primary" plain size="small" @click="inputFromClipboard" icon="el-icon-document-copy">粘贴</el-button>
+            <template v-if="formInline.inputData.trim() && formInline.inputData.trim()!=formInline.importData">
+              <el-divider direction="vertical"></el-divider>
+              <el-button size="small" type="primary" @click="render">确定导入</el-button>
+            </template>
+          </template>
+          <el-form :model="formInline" ref="importForm" @submit.native.prevent>
+            <el-form-item>
+              <el-radio-group v-model="formInline.dataType">
+                <el-radio label="blueprint">导入蓝图</el-radio>
+                <el-radio label="json">导入JSON</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item prop="inputData" :rules="rules.notNull">
+              <el-input type="textarea" v-model="formInline.inputData" :rows="5" ref="inputDataRef"></el-input>
+            </el-form-item>
+          </el-form>
+          <template v-if="formInline.blueprintData">
+            <el-divider></el-divider>
+            <div>包含设施</div>
+            <div class="itemList">
+              <el-tooltip class="itemWrap" effect="dark" placement="top" v-for="item,index in getItemList(formInline.blueprintData)" :key="index">
+                <template slot="content">
+                  <p>{{item.name}}</p>
+                </template>
+                <div class="item">
+                  <img class="icon" :src="getIcon(item)" />
+                  <div class="count">{{item.count}}</div>
                 </div>
-              </div>
-              <div class="card_content">
-                <el-form :model="formInline" ref="importForm" @submit.native.prevent>
-                  <el-form-item>
-                    <el-radio-group v-model="formInline.dataType">
-                      <el-radio label="blueprint">导入蓝图</el-radio>
-                      <el-radio label="json">导入JSON</el-radio>
-                    </el-radio-group>
-                  </el-form-item>
-                  <el-form-item prop="inputData" :rules="rules.notNull">
-                    <el-input type="textarea" v-model="formInline.inputData" :rows="5" ref="inputDataRef"></el-input>
-                  </el-form-item>
-                </el-form>
-                <template v-if="formInline.blueprintData">
-                  <el-divider></el-divider>
-                  <div>包含设施</div>
-                  <div class="itemList">
-                    <el-tooltip class="itemWrap" effect="dark" placement="top" v-for="item,index in getItemList(formInline.blueprintData)" :key="index">
+              </el-tooltip>
+            </div>
+          </template>
+        </ScrollCardItem>
+        <ScrollCardItem name="生成配置">
+          <template #topRight>
+            <el-button size="small" type="primary" @click="output" v-if="formInline.blueprintData || formInline.paramType == '无中生有'">输出</el-button>
+          </template>
+          <el-form label-width="120px" :model="formInline" ref="paramForm" @submit.native.prevent :rules="rules">
+            <el-form-item label="转换类型：">
+              <el-radio-group v-model="formInline.paramType">
+                <el-radio label="默认转换">默认转换</el-radio>
+                <el-radio label="垂直叠加">垂直叠加</el-radio>
+                <el-radio label="坐标偏移">坐标偏移</el-radio>
+                <el-radio label="水平翻转">水平翻转</el-radio>
+                <el-radio label="线性变换">线性变换</el-radio>
+                <el-radio label="无中生有">无中生有(无需导入)</el-radio>
+                <el-radio label="无带流">
+                  无带流
+                  <el-tooltip class="item" effect="dark" placement="top">
+                    <template slot="content">
+                      <p>p.s.无带流在2023/01/05的官方更新后，直接粘贴无带蓝图将出现分拣器输入输出端失效</p>
+                      <p>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端</p>
+                    </template>
+                    <span>
+                      <i class="el-icon-question"></i>
+                    </span>
+                  </el-tooltip>
+                </el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <!-- 默认转换 -->
+            <template v-if="formInline.paramType=='默认转换'">
+              <div class="flex">
+                <el-form-item label="转换选项：">
+                  <el-checkbox v-model="formInline.params.addBase">
+                    <el-tooltip class="item" effect="dark" placement="top">
                       <template slot="content">
-                        <p>{{item.name}}</p>
+                        <p>悬空建筑重新框选复制后会提示“无地基支撑”，可通过此项修正</p>
                       </template>
-                      <div class="item">
-                        <img class="icon" :src="getIcon(item)" />
-                        <div class="count">{{item.count}}</div>
-                      </div>
+                      <span>
+                        悬空建筑增加地基
+                        <i class="el-icon-question"></i>
+                      </span>
                     </el-tooltip>
-                  </div>
+                  </el-checkbox>
+                  <el-checkbox v-model="formInline.params.clearBelt">清空传送带图标</el-checkbox>
+                  <el-checkbox v-model="formInline.params.clearInserter">清空分拣器过滤</el-checkbox>
+                  <el-checkbox v-model="formInline.params.stationUnlockAmount">关闭沙盒模式物流塔槽位锁</el-checkbox>
+                </el-form-item>
+              </div>
+            </template>
+            <!-- 垂直叠加 -->
+            <template v-else-if="formInline.paramType=='垂直叠加'">
+              <div class="flex">
+                <el-form-item label="生成层数：" prop="params.floors">
+                  <el-input type="numberx" v-model="formInline.params.floors"></el-input>
+                </el-form-item>
+                <el-form-item label="垂直间隔：" prop="params.spacing">
+                  <template slot="label">
+                    <el-tooltip class="item" effect="dark" placement="top">
+                      <template slot="content">
+                        <p>常见物品的单层高度：</p>
+                        <p>四向分流器：2</p>
+                        <p>自动集装器：2</p>
+                        <p>小型储物仓：2</p>
+                        <p>大型储物仓：3</p>
+                        <p>储液罐：3</p>
+                        <p>矩阵研究站：3</p>
+                        <p>制造台：4</p>
+                      </template>
+                      <span>
+                        垂直间隔
+                        <i class="el-icon-question"></i>：
+                      </span>
+                    </el-tooltip>
+                  </template>
+                  <el-input type="number" v-model="formInline.params.spacing"></el-input>
+                </el-form-item>
+              </div>
+              <div class="flex">
+                <el-form-item label="各层关系：" prop="params.isPile" :rules="rules.selectNotNull">
+                  <el-radio-group v-model="formInline.params.isPile">
+                    <el-radio :label="true">
+                      <el-tooltip class="item" effect="dark" placement="top">
+                        <template slot="content">
+                          <p>*叠加后可堆叠的建筑将建立游戏内的堆叠关系，如箱子将互通</p>
+                          <p>可堆叠物品：四向分流器、自动集装器、小型储物仓、大型储物仓、储液罐、矩阵研究站、喷涂机</p>
+                        </template>
+                        <span>
+                          堆叠
+                          <i class="el-icon-question"></i>
+                        </span>
+                      </el-tooltip>
+                    </el-radio>
+                    <el-radio :label="false">
+                      <el-tooltip class="item" effect="dark" placement="top">
+                        <template slot="content">
+                          <p>*叠加后每层独立运作</p>
+                        </template>
+                        <span>
+                          独立
+                          <i class="el-icon-question"></i>
+                        </span>
+                      </el-tooltip>
+                    </el-radio>
+                  </el-radio-group>
+                </el-form-item>
+              </div>
+            </template>
+            <!-- 坐标偏移 -->
+            <template v-else-if="formInline.paramType=='坐标偏移'">
+              <div class="flex">
+                <el-form-item label="偏移方向：" prop="params.offsetType" key="offsetType" :rules="rules.selectNotNull">
+                  <el-radio-group v-model="formInline.params.offsetType">
+                    <el-radio label="vertical">垂直偏移</el-radio>
+                    <el-radio label="horizontal">水平偏移</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+              </div>
+              <div class="flex">
+                <template v-if="formInline.params.offsetType=='vertical'">
+                  <el-form-item label="垂直偏移量：" prop="params.offsetZ" key="offsetZ">
+                    <template slot="label">
+                      <el-tooltip class="item" effect="dark" placement="top">
+                        <template slot="content">
+                          <p>基于0相对偏移</p>
+                        </template>
+                        <span>
+                          垂直偏移量
+                          <i class="el-icon-question"></i>：
+                        </span>
+                      </el-tooltip>
+                    </template>
+                    <el-input type="number" v-model="formInline.params.offsetZ"></el-input>
+                  </el-form-item>
+                </template>
+                <template v-if="formInline.params.offsetType=='horizontal'">
+                  <el-form-item label="横向偏移量：" prop="params.offsetX" key="offsetX">
+                    <template slot="label">
+                      <el-tooltip class="item" effect="dark" placement="top">
+                        <template slot="content">
+                          <p>基于0相对偏移</p>
+                        </template>
+                        <span>
+                          横向偏移量
+                          <i class="el-icon-question"></i>：
+                        </span>
+                      </el-tooltip>
+                    </template>
+                    <el-input type="number" v-model="formInline.params.offsetX"></el-input>
+                  </el-form-item>
+                  <el-form-item label="纵向偏移量：" prop="params.offsetY" key="offsetY">
+                    <template slot="label">
+                      <el-tooltip class="item" effect="dark" placement="top">
+                        <template slot="content">
+                          <p>基于0相对偏移</p>
+                        </template>
+                        <span>
+                          纵向偏移量
+                          <i class="el-icon-question"></i>：
+                        </span>
+                      </el-tooltip>
+                    </template>
+                    <el-input type="number" v-model="formInline.params.offsetY"></el-input>
+                  </el-form-item>
                 </template>
               </div>
-            </el-card>
-            <el-card name="2">
-              <div slot="header" class="card_header">
-                <span class="title">生成配置</span>
-                <div class="btnWrap">
-                  <el-button size="small" type="primary" @click="output" v-if="formInline.blueprintData || formInline.paramType == '无中生有'">输出</el-button>
-                </div>
-              </div>
-              <div class="card_content">
-                <el-form label-width="120px" :model="formInline" ref="paramForm" @submit.native.prevent :rules="rules">
-                  <el-form-item label="转换类型：">
-                    <el-radio-group v-model="formInline.paramType">
-                      <el-radio label="默认转换">默认转换</el-radio>
-                      <el-radio label="垂直叠加">垂直叠加</el-radio>
-                      <el-radio label="坐标偏移">坐标偏移</el-radio>
-                      <el-radio label="水平翻转">水平翻转</el-radio>
-                      <el-radio label="线性变换">线性变换</el-radio>
-                      <el-radio label="无中生有">无中生有(无需导入)</el-radio>
-                      <el-radio label="无带流">
-                        无带流
-                        <el-tooltip class="item" effect="dark" placement="top">
-                          <template slot="content">
-                            <p>p.s.无带流在2023/01/05的官方更新后，直接粘贴无带蓝图将出现分拣器输入输出端失效</p>
-                            <p>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端</p>
-                          </template>
-                          <span>
-                            <i class="el-icon-question"></i>
-                          </span>
-                        </el-tooltip>
-                      </el-radio>
-                    </el-radio-group>
-                  </el-form-item>
-                  <!-- 默认转换 -->
-                  <template v-if="formInline.paramType=='默认转换'">
-                    <div class="flex">
-                      <el-form-item label="转换选项：">
-                        <el-checkbox v-model="formInline.params.addBase">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>悬空建筑重新框选复制后会提示“无地基支撑”，可通过此项修正</p>
-                            </template>
-                            <span>
-                              悬空建筑增加地基
-                              <i class="el-icon-question"></i>
-                            </span>
-                          </el-tooltip>
-                        </el-checkbox>
-                        <el-checkbox v-model="formInline.params.clearBelt">清空传送带图标</el-checkbox>
-                        <el-checkbox v-model="formInline.params.clearInserter">清空分拣器过滤</el-checkbox>
-                        <el-checkbox v-model="formInline.params.stationUnlockAmount">关闭沙盒模式物流塔槽位锁</el-checkbox>
-                      </el-form-item>
-                    </div>
-                  </template>
-                  <!-- 垂直叠加 -->
-                  <template v-else-if="formInline.paramType=='垂直叠加'">
-                    <div class="flex">
-                      <el-form-item label="生成层数：" prop="params.floors">
-                        <el-input type="numberx" v-model="formInline.params.floors"></el-input>
-                      </el-form-item>
-                      <el-form-item label="垂直间隔：" prop="params.spacing">
-                        <template slot="label">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>常见物品的单层高度：</p>
-                              <p>四向分流器：2</p>
-                              <p>自动集装器：2</p>
-                              <p>小型储物仓：2</p>
-                              <p>大型储物仓：3</p>
-                              <p>储液罐：3</p>
-                              <p>矩阵研究站：3</p>
-                              <p>制造台：4</p>
-                            </template>
-                            <span>
-                              垂直间隔
-                              <i class="el-icon-question"></i>：
-                            </span>
-                          </el-tooltip>
-                        </template>
-                        <el-input type="number" v-model="formInline.params.spacing"></el-input>
-                      </el-form-item>
-                    </div>
-                    <div class="flex">
-                      <el-form-item label="各层关系：" prop="params.isPile" :rules="rules.selectNotNull">
-                        <el-radio-group v-model="formInline.params.isPile">
-                          <el-radio :label="true">
-                            <el-tooltip class="item" effect="dark" placement="top">
-                              <template slot="content">
-                                <p>*叠加后可堆叠的建筑将建立游戏内的堆叠关系，如箱子将互通</p>
-                                <p>可堆叠物品：四向分流器、自动集装器、小型储物仓、大型储物仓、储液罐、矩阵研究站、喷涂机</p>
-                              </template>
-                              <span>
-                                堆叠
-                                <i class="el-icon-question"></i>
-                              </span>
-                            </el-tooltip>
-                          </el-radio>
-                          <el-radio :label="false">
-                            <el-tooltip class="item" effect="dark" placement="top">
-                              <template slot="content">
-                                <p>*叠加后每层独立运作</p>
-                              </template>
-                              <span>
-                                独立
-                                <i class="el-icon-question"></i>
-                              </span>
-                            </el-tooltip>
-                          </el-radio>
-                        </el-radio-group>
-                      </el-form-item>
-                    </div>
-                  </template>
-                  <!-- 坐标偏移 -->
-                  <template v-else-if="formInline.paramType=='坐标偏移'">
-                    <div class="flex">
-                      <el-form-item label="偏移方向：" prop="params.offsetType" key="offsetType" :rules="rules.selectNotNull">
-                        <el-radio-group v-model="formInline.params.offsetType">
-                          <el-radio label="vertical">垂直偏移</el-radio>
-                          <el-radio label="horizontal">水平偏移</el-radio>
-                        </el-radio-group>
-                      </el-form-item>
-                    </div>
-                    <div class="flex">
-                      <template v-if="formInline.params.offsetType=='vertical'">
-                        <el-form-item label="垂直偏移量：" prop="params.offsetZ" key="offsetZ">
-                          <template slot="label">
-                            <el-tooltip class="item" effect="dark" placement="top">
-                              <template slot="content">
-                                <p>基于0相对偏移</p>
-                              </template>
-                              <span>
-                                垂直偏移量
-                                <i class="el-icon-question"></i>：
-                              </span>
-                            </el-tooltip>
-                          </template>
-                          <el-input type="number" v-model="formInline.params.offsetZ"></el-input>
-                        </el-form-item>
-                      </template>
-                      <template v-if="formInline.params.offsetType=='horizontal'">
-                        <el-form-item label="横向偏移量：" prop="params.offsetX" key="offsetX">
-                          <template slot="label">
-                            <el-tooltip class="item" effect="dark" placement="top">
-                              <template slot="content">
-                                <p>基于0相对偏移</p>
-                              </template>
-                              <span>
-                                横向偏移量
-                                <i class="el-icon-question"></i>：
-                              </span>
-                            </el-tooltip>
-                          </template>
-                          <el-input type="number" v-model="formInline.params.offsetX"></el-input>
-                        </el-form-item>
-                        <el-form-item label="纵向偏移量：" prop="params.offsetY" key="offsetY">
-                          <template slot="label">
-                            <el-tooltip class="item" effect="dark" placement="top">
-                              <template slot="content">
-                                <p>基于0相对偏移</p>
-                              </template>
-                              <span>
-                                纵向偏移量
-                                <i class="el-icon-question"></i>：
-                              </span>
-                            </el-tooltip>
-                          </template>
-                          <el-input type="number" v-model="formInline.params.offsetY"></el-input>
-                        </el-form-item>
-                      </template>
-                    </div>
-                  </template>
-                  <!-- 水平翻转 -->
-                  <template v-else-if="formInline.paramType=='水平翻转'">
-                    <div class="flex">
-                      <el-form-item label="翻转方向：" prop="params.overturnType" key="overturnType" :rules="rules.selectNotNull">
-                        <template slot="label">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>火力发电厂、微型聚变发电站的分拣器接口不对称，翻转后不对称的那个接口会无法连接</p>
-                            </template>
-                            <span>
-                              翻转方向
-                              <i class="el-icon-question"></i>：
-                            </span>
-                          </el-tooltip>
-                        </template>
-                        <el-radio-group v-model="formInline.params.overturnType">
-                          <el-radio label="x">横向翻转</el-radio>
-                          <el-radio label="y">纵向翻转</el-radio>
-                        </el-radio-group>
-                      </el-form-item>
-                    </div>
-                  </template>
-                  <!-- 线性变换 -->
-                  <template v-else-if="formInline.paramType=='线性变换'">
-                    <div class="flex">
-                      <el-form-item label="横向放缩量：" prop="params.zoomX" key="zoomX">
-                        <template slot="label">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>基于1缩放</p>
-                              <p>输入负数可横向翻转</p>
-                              <p>*高纬度过密建筑提示建筑碰撞的蓝图，可用1.1放大蓝图间隙解决</p>
-                            </template>
-                            <span>
-                              横向放缩量
-                              <i class="el-icon-question"></i>：
-                            </span>
-                          </el-tooltip>
-                        </template>
-                        <el-input type="number" v-model="formInline.params.zoomX"></el-input>
-                      </el-form-item>
-                      <el-form-item label="纵向放缩量：" prop="params.zoomY" key="zoomY">
-                        <template slot="label">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>基于1缩放</p>
-                              <p>输入负数可纵向翻转</p>
-                              <p>*高纬度过密建筑提示建筑碰撞的蓝图，可用1.1放大蓝图间隙解决</p>
-                            </template>
-                            <span>
-                              纵向放缩量
-                              <i class="el-icon-question"></i>：
-                            </span>
-                          </el-tooltip>
-                        </template>
-                        <el-input type="number" v-model="formInline.params.zoomY"></el-input>
-                      </el-form-item>
-                      <el-form-item label="旋转角度：" prop="params.rotate" key="rotate">
-                        <template slot="label">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>-360至360</p>
-                            </template>
-                            <span>
-                              旋转角度
-                              <i class="el-icon-question"></i>：
-                            </span>
-                          </el-tooltip>
-                        </template>
-                        <el-input type="number" v-model="formInline.params.rotate"></el-input>
-                      </el-form-item>
-                    </div>
-                  </template>
-                  <!-- 无中生有 -->
-                  <template v-else-if="formInline.paramType=='无中生有'">
-                    <div class="flex">
-                      <el-form-item label="生成内容：" prop="params.createType" :rules="rules.selectNotNull">
-                        <el-radio-group v-model="formInline.params.createType">
-                          <el-radio label="0">
-                            <el-tooltip class="item" effect="dark" placement="top">
-                              <template slot="content">
-                                <p>调换起终点高度可更改传送带方向</p>
-                              </template>
-                              <span>
-                                无褶皱垂直传送带
-                                <i class="el-icon-question"></i>
-                              </span>
-                            </el-tooltip>
-                          </el-radio>
-                          <el-radio label="1">
-                            <el-tooltip class="item" effect="dark" placement="top">
-                              <template slot="content">
-                                <p>可实现超远距离无带传输的分拣器</p>
-                                <p>生成的传送带两端将会有随机编码对应，可直接用传送带连接端点使用</p>
-                                <br />
-                                <p>p.s.无带流在2023/01/05的官方更新后，直接粘贴无带蓝图将出现分拣器输入输出端失效</p>
-                                <p>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端</p>
-                              </template>
-                              <span>
-                                虫洞分拣器
-                                <i class="el-icon-question"></i>
-                              </span>
-                            </el-tooltip>
-                          </el-radio>
-                        </el-radio-group>
-                      </el-form-item>
-                    </div>
-                    <template v-if="formInline.params.createType=='0'">
-                      <div class="flex">
-                        <!-- 无褶皱垂直传送带 -->
-                        <el-form-item label="起点高度：" prop="params.startZ" key="startZ">
-                          <el-input type="number" v-model="formInline.params.startZ"></el-input>
-                        </el-form-item>
-                        <el-form-item label="终点高度：" prop="params.endZ" key="endZ">
-                          <el-input type="number" v-model="formInline.params.endZ"></el-input>
-                        </el-form-item>
-                      </div>
-                    </template>
-                    <template v-if="formInline.params.createType=='1'">
-                      <!-- 虫洞分拣器 -->
-                      <div class="flex">
-                        <el-form-item label="起点相对坐标X：" prop="params.startPoint.X" key="startPoint.X">
-                          <el-input type="number" v-model="formInline.params.startPoint.X"></el-input>
-                        </el-form-item>
-                        <el-form-item label="起点相对坐标Y：" prop="params.startPoint.Y" key="startPoint.Y">
-                          <el-input type="number" v-model="formInline.params.startPoint.Y"></el-input>
-                        </el-form-item>
-                        <el-form-item label="起点相对坐标Z：" prop="params.startPoint.Z" key="startPoint.Z">
-                          <el-input type="number" v-model="formInline.params.startPoint.Z"></el-input>
-                        </el-form-item>
-                      </div>
-                      <div class="flex">
-                        <el-form-item label="终点相对坐标X：" prop="params.endPoint.X" key="endPoint.X">
-                          <el-input type="number" v-model="formInline.params.endPoint.X"></el-input>
-                        </el-form-item>
-                        <el-form-item label="终点相对坐标Y：" prop="params.endPoint.Y" key="endPoint.Y">
-                          <el-input type="number" v-model="formInline.params.endPoint.Y"></el-input>
-                        </el-form-item>
-                        <el-form-item label="终点相对坐标Z：" prop="params.endPoint.Z" key="endPoint.Z">
-                          <el-input type="number" v-model="formInline.params.endPoint.Z"></el-input>
-                        </el-form-item>
-                      </div>
-                      <div class="flex">
-                        <el-form-item label="分拣器方向：" prop="params.WinserterDir" key="WinserterDir">
-                          <el-select v-model="formInline.params.WinserterDir">
-                            <el-option value="left" label="向左"></el-option>
-                            <el-option value="right" label="向右"></el-option>
-                            <el-option value="top" label="向上"></el-option>
-                            <el-option value="bottom" label="向下"></el-option>
-                          </el-select>
-                        </el-form-item>
-                      </div>
-                    </template>
-                  </template>
-                  <!-- 无带流 -->
-                  <template v-else-if="formInline.paramType=='无带流'">
-                    <el-form-item label="替代负数：" prop="params.negativeMode" key="negativeMode">
-                      <el-radio-group v-model="formInline.params.negativeMode">
-                        <el-radio label="-1">仍输入负数</el-radio>
-                        <el-radio label="7">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>2023/12/21更新后游戏内输入负数显示为0，实际仍可输入负数但可读性不佳，使用7代替符号，如:7999=-999</p>
-                            </template>
-                            <span>
-                              使用7代替负号
-                              <i class="el-icon-question"></i>
-                            </span>
-                          </el-tooltip>
-                        </el-radio>
-                      </el-radio-group>
-                      <div class="testNumWrap" v-if="formInline.params.negativeMode=='7'">
-                        测试数字：
-                        <el-input-number class="ipt" :controls="false" size="small" v-model="formInline.params.testNum" :max="999999" :min="0" :precision="0"></el-input-number>
-                        = {{formatNum_sevenToNegative(formInline.params.testNum)}}
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="输出标记数：" prop="params.outputCountMode" key="outputCountMode" :rules="rules.selectNotNull">
-                      <template slot="label">
-                        <el-tooltip class="item" effect="dark" placement="top">
-                          <template slot="content">
-                            <p>输出后更改传送带图标下的标记数</p>
-                            <p>*只会影响到带图标且标记数不为0的传送带节点</p>
-                          </template>
-                          <span>
-                            输出标记数
-                            <i class="el-icon-question"></i>：
-                          </span>
-                        </el-tooltip>
-                      </template>
-                      <el-radio-group v-model="formInline.params.outputCountMode">
-                        <el-radio label="none">原标记数</el-radio>
-                        <el-radio label="speed">匹配分拣器速度</el-radio>
-                        <el-radio label="num">匹配分拣器数量</el-radio>
-                        <el-radio label="clear">
-                          <el-tooltip class="item" effect="dark" placement="top">
-                            <template slot="content">
-                              <p>*只清除匹配上的传送带图标及标记数</p>
-                              <p>清除所有请到“默认转换”功能输出</p>
-                            </template>
-                            <span>
-                              清除标记
-                              <i class="el-icon-question"></i>
-                            </span>
-                          </el-tooltip>
-                        </el-radio>
-                      </el-radio-group>
-                    </el-form-item>
-                    <el-form-item>
-                      <el-collapse>
-                        <el-collapse-item>
-                          <template slot="title">
-                            操作步骤
-                            <i class="header-icon el-icon-info"></i>
-                          </template>
-                          <div class="line">
-                            <b>步骤①、</b>拆掉分拣器下的传送带，让分拣器输入/输出端失效；
-                          </div>
-                          <div class="line">
-                            <b>步骤②、</b>给失效的分拣器设置过滤物品（假设物品为A）；
-                          </div>
-                          <div class="line">
-                            <b>步骤③、</b>给需要对接的传送带节点打上物品A的图标，并在图标下输入标记数（正数匹配输出端；负数匹配输入端）；
-                          </div>
-                          <div class="line">
-                            <b>步骤④、</b>将传送带节点和分拣器（连带着建筑）复制进蓝图工具，使用“无带流”一键输出；
-                          </div>
-                          <div class="line">
-                            <b>步骤⑤、</b>粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端。
-                          </div>
-                        </el-collapse-item>
-                        <el-collapse-item>
-                          <template slot="title">
-                            注意要点
-                            <i class="header-icon el-icon-info"></i>
-                          </template>
-                          <div class="line">
-                            <b>要点①、</b>传送带图标下的
-                            <b>标记数必须为正数或负数</b>，不匹配0。
-                          </div>
-                          <div class="line">
-                            <div>
-                              <b>要点②、</b>标记数的
-                              <b>正负</b>用于控制分拣器是从传送带上
-                              <b>放入还是取出</b>。
-                            </div>
-                            <div>（正数匹配分拣器失效的输出端；负数匹配分拣器失效的输入端）</div>
-                          </div>
-                          <div class="line">
-                            <div>
-                              <b>要点③、</b>标记数的
-                              <b>数值</b>用于控制可接入的
-                              <b>分拣器总速度上限</b>。
-                            </div>
-                            <div>（分拣器速度计算长度影响，长度1格时速度为：白30/蓝6/绿3/黄1.5，具体看游戏内分拣器属性，白爪以30计）</div>
-                            <div>【如：“-30”可匹配5个蓝爪的输入端——从带上取走，“9”可匹配1个蓝爪+1个绿爪的输出端——往带上放置】</div>
-                          </div>
-                          <div class="line">
-                            <b>要点④、</b>一个传送带节点匹配满上限，才会匹配下一个符合条件的节点。（匹配顺序按建筑顺序）
-                          </div>
-                          <div class="line">
-                            <b>要点⑤、</b>导入时传送带上已有的分拣器链接也会计入总速度。
-                          </div>
-                          <div class="line" style="color: red">
-                            <b>要点⑥、</b>*一个传送带节点最多可链接8个分拣器。（官方限制，输入端和输出端合计）
-                          </div>
-                          <div class="line" style="color: red">
-                            <b>要点⑦、</b>*蓝图每次复制后负数标记数会+1，因此粘贴进工具的蓝图会默认-1修正。（官方BUG）
-                          </div>
-                          <div class="line" style="color: red">
-                            <b>要点⑧、</b>*无带流在2023/01/05的官方更新后，直接粘贴无带蓝图将出现分拣器输入输出端失效
-                            <div>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端</div>
-                          </div>
-                        </el-collapse-item>
-                      </el-collapse>
-                    </el-form-item>
-                    <div style="text-align: center;line-height:50px">
-                      <el-button type="warning" round @click="openUrl('https://www.bilibili.com/video/BV138411x7Sn')">操作视频教程</el-button>
-                    </div>
-                  </template>
-                </el-form>
-              </div>
-            </el-card>
-            <el-card name="3">
-              <div slot="header" class="card_header">
-                <span class="title">输出结果</span>
-                <div class="btnWrap" v-if="formInline.resData.trim() || formInline.resJSON.trim()">
-                  <el-button plain size="small" @click="saveFile" icon="el-icon-folder-opened">导出{{formInline.resType=='blueprint'?'蓝图':formInline.resType=='json'?'JSON':''}}文件</el-button>
-                  <el-button type="primary" plain size="small" @click="outToClipboard" icon="el-icon-document-copy">复制</el-button>
-                  <el-divider direction="vertical"></el-divider>
-                  <el-button type="primary" size="small" @click="outToInput">将结果重新导入</el-button>
-                </div>
-              </div>
-              <div class="card_content">
-                <div class="resConfigMsg" v-if="formInline.resConfigMsg">当前输出配置：{{formInline.resConfigMsg}}</div>
-                <el-form :model="formInline" @submit.native.prevent>
-                  <el-form-item>
-                    <el-radio-group v-model="formInline.resType">
-                      <el-radio label="blueprint">输出蓝图</el-radio>
-                      <el-radio label="json">输出JSON</el-radio>
-                    </el-radio-group>
-                  </el-form-item>
-                  <el-form-item v-if="formInline.resType=='blueprint'">
-                    <el-input type="textarea" v-model="formInline.resData" :rows="5" readonly ref="resDataRef"></el-input>
-                  </el-form-item>
-                  <el-form-item v-if="formInline.resType=='json'">
-                    <el-input type="textarea" v-model="formInline.resJSON" :rows="5" readonly ref="resJSONRef"></el-input>
-                  </el-form-item>
-                </el-form>
-                <template v-if="formInline.resBlueprintData">
-                  <el-divider></el-divider>
-                  <div>包含设施</div>
-                  <div class="itemList">
-                    <el-tooltip class="itemWrap" effect="dark" placement="top" v-for="item,index in getItemList(formInline.resBlueprintData)" :key="index">
+            </template>
+            <!-- 水平翻转 -->
+            <template v-else-if="formInline.paramType=='水平翻转'">
+              <div class="flex">
+                <el-form-item label="翻转方向：" prop="params.overturnType" key="overturnType" :rules="rules.selectNotNull">
+                  <template slot="label">
+                    <el-tooltip class="item" effect="dark" placement="top">
                       <template slot="content">
-                        <p>{{item.name}}</p>
+                        <p>火力发电厂、微型聚变发电站的分拣器接口不对称，翻转后不对称的那个接口会无法连接</p>
                       </template>
-                      <div class="item">
-                        <img class="icon" :src="getIcon(item)" />
-                        <div class="count">{{item.count}}</div>
-                      </div>
+                      <span>
+                        翻转方向
+                        <i class="el-icon-question"></i>：
+                      </span>
                     </el-tooltip>
-                  </div>
-                </template>
+                  </template>
+                  <el-radio-group v-model="formInline.params.overturnType">
+                    <el-radio label="x">横向翻转</el-radio>
+                    <el-radio label="y">纵向翻转</el-radio>
+                  </el-radio-group>
+                </el-form-item>
               </div>
-            </el-card>
-          </el-collapse>
-        </el-scrollbar>
-      </div>
+            </template>
+            <!-- 线性变换 -->
+            <template v-else-if="formInline.paramType=='线性变换'">
+              <div class="flex">
+                <el-form-item label="横向放缩量：" prop="params.zoomX" key="zoomX">
+                  <template slot="label">
+                    <el-tooltip class="item" effect="dark" placement="top">
+                      <template slot="content">
+                        <p>基于1缩放</p>
+                        <p>输入负数可横向翻转</p>
+                        <p>*高纬度过密建筑提示建筑碰撞的蓝图，可用1.1放大蓝图间隙解决</p>
+                      </template>
+                      <span>
+                        横向放缩量
+                        <i class="el-icon-question"></i>：
+                      </span>
+                    </el-tooltip>
+                  </template>
+                  <el-input type="number" v-model="formInline.params.zoomX"></el-input>
+                </el-form-item>
+                <el-form-item label="纵向放缩量：" prop="params.zoomY" key="zoomY">
+                  <template slot="label">
+                    <el-tooltip class="item" effect="dark" placement="top">
+                      <template slot="content">
+                        <p>基于1缩放</p>
+                        <p>输入负数可纵向翻转</p>
+                        <p>*高纬度过密建筑提示建筑碰撞的蓝图，可用1.1放大蓝图间隙解决</p>
+                      </template>
+                      <span>
+                        纵向放缩量
+                        <i class="el-icon-question"></i>：
+                      </span>
+                    </el-tooltip>
+                  </template>
+                  <el-input type="number" v-model="formInline.params.zoomY"></el-input>
+                </el-form-item>
+                <el-form-item label="旋转角度：" prop="params.rotate" key="rotate">
+                  <template slot="label">
+                    <el-tooltip class="item" effect="dark" placement="top">
+                      <template slot="content">
+                        <p>-360至360</p>
+                      </template>
+                      <span>
+                        旋转角度
+                        <i class="el-icon-question"></i>：
+                      </span>
+                    </el-tooltip>
+                  </template>
+                  <el-input type="number" v-model="formInline.params.rotate"></el-input>
+                </el-form-item>
+              </div>
+            </template>
+            <!-- 无中生有 -->
+            <template v-else-if="formInline.paramType=='无中生有'">
+              <div class="flex">
+                <el-form-item label="生成内容：" prop="params.createType" :rules="rules.selectNotNull">
+                  <el-radio-group v-model="formInline.params.createType">
+                    <el-radio label="0">
+                      <el-tooltip class="item" effect="dark" placement="top">
+                        <template slot="content">
+                          <p>调换起终点高度可更改传送带方向</p>
+                        </template>
+                        <span>
+                          无褶皱垂直传送带
+                          <i class="el-icon-question"></i>
+                        </span>
+                      </el-tooltip>
+                    </el-radio>
+                    <el-radio label="1">
+                      <el-tooltip class="item" effect="dark" placement="top">
+                        <template slot="content">
+                          <p>可实现超远距离无带传输的分拣器</p>
+                          <p>生成的传送带两端将会有随机编码对应，可直接用传送带连接端点使用</p>
+                          <br />
+                          <p>p.s.无带流在2023/01/05的官方更新后，直接粘贴无带蓝图将出现分拣器输入输出端失效</p>
+                          <p>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端</p>
+                        </template>
+                        <span>
+                          虫洞分拣器
+                          <i class="el-icon-question"></i>
+                        </span>
+                      </el-tooltip>
+                    </el-radio>
+                  </el-radio-group>
+                </el-form-item>
+              </div>
+              <template v-if="formInline.params.createType=='0'">
+                <div class="flex">
+                  <!-- 无褶皱垂直传送带 -->
+                  <el-form-item label="起点高度：" prop="params.startZ" key="startZ">
+                    <el-input type="number" v-model="formInline.params.startZ"></el-input>
+                  </el-form-item>
+                  <el-form-item label="终点高度：" prop="params.endZ" key="endZ">
+                    <el-input type="number" v-model="formInline.params.endZ"></el-input>
+                  </el-form-item>
+                </div>
+              </template>
+              <template v-if="formInline.params.createType=='1'">
+                <!-- 虫洞分拣器 -->
+                <div class="flex">
+                  <el-form-item label="起点相对坐标X：" prop="params.startPoint.X" key="startPoint.X">
+                    <el-input type="number" v-model="formInline.params.startPoint.X"></el-input>
+                  </el-form-item>
+                  <el-form-item label="起点相对坐标Y：" prop="params.startPoint.Y" key="startPoint.Y">
+                    <el-input type="number" v-model="formInline.params.startPoint.Y"></el-input>
+                  </el-form-item>
+                  <el-form-item label="起点相对坐标Z：" prop="params.startPoint.Z" key="startPoint.Z">
+                    <el-input type="number" v-model="formInline.params.startPoint.Z"></el-input>
+                  </el-form-item>
+                </div>
+                <div class="flex">
+                  <el-form-item label="终点相对坐标X：" prop="params.endPoint.X" key="endPoint.X">
+                    <el-input type="number" v-model="formInline.params.endPoint.X"></el-input>
+                  </el-form-item>
+                  <el-form-item label="终点相对坐标Y：" prop="params.endPoint.Y" key="endPoint.Y">
+                    <el-input type="number" v-model="formInline.params.endPoint.Y"></el-input>
+                  </el-form-item>
+                  <el-form-item label="终点相对坐标Z：" prop="params.endPoint.Z" key="endPoint.Z">
+                    <el-input type="number" v-model="formInline.params.endPoint.Z"></el-input>
+                  </el-form-item>
+                </div>
+                <div class="flex">
+                  <el-form-item label="分拣器方向：" prop="params.WinserterDir" key="WinserterDir">
+                    <el-select v-model="formInline.params.WinserterDir">
+                      <el-option value="left" label="向左"></el-option>
+                      <el-option value="right" label="向右"></el-option>
+                      <el-option value="top" label="向上"></el-option>
+                      <el-option value="bottom" label="向下"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </div>
+              </template>
+            </template>
+            <!-- 无带流 -->
+            <template v-else-if="formInline.paramType=='无带流'">
+              <el-form-item label="替代负数：" prop="params.negativeMode" key="negativeMode">
+                <el-radio-group v-model="formInline.params.negativeMode">
+                  <el-radio label="-1">仍输入负数</el-radio>
+                  <el-radio label="7">
+                    <el-tooltip class="item" effect="dark" placement="top">
+                      <template slot="content">
+                        <p>2023/12/21更新后游戏内输入负数显示为0，实际仍可输入负数但可读性不佳，使用7代替符号，如:7999=-999</p>
+                      </template>
+                      <span>
+                        使用7代替负号
+                        <i class="el-icon-question"></i>
+                      </span>
+                    </el-tooltip>
+                  </el-radio>
+                </el-radio-group>
+                <div class="testNumWrap" v-if="formInline.params.negativeMode=='7'">
+                  测试数字：
+                  <el-input-number class="ipt" :controls="false" size="small" v-model="formInline.params.testNum" :max="999999" :min="0" :precision="0"></el-input-number>
+                  = {{formatNum_sevenToNegative(formInline.params.testNum)}}
+                </div>
+              </el-form-item>
+              <el-form-item label="输出标记数：" prop="params.outputCountMode" key="outputCountMode" :rules="rules.selectNotNull">
+                <template slot="label">
+                  <el-tooltip class="item" effect="dark" placement="top">
+                    <template slot="content">
+                      <p>输出后更改传送带图标下的标记数</p>
+                      <p>*只会影响到带图标且标记数不为0的传送带节点</p>
+                    </template>
+                    <span>
+                      输出标记数
+                      <i class="el-icon-question"></i>：
+                    </span>
+                  </el-tooltip>
+                </template>
+                <el-radio-group v-model="formInline.params.outputCountMode">
+                  <el-radio label="none">原标记数</el-radio>
+                  <el-radio label="speed">匹配分拣器速度</el-radio>
+                  <el-radio label="num">匹配分拣器数量</el-radio>
+                  <el-radio label="clear">
+                    <el-tooltip class="item" effect="dark" placement="top">
+                      <template slot="content">
+                        <p>*只清除匹配上的传送带图标及标记数</p>
+                        <p>清除所有请到“默认转换”功能输出</p>
+                      </template>
+                      <span>
+                        清除标记
+                        <i class="el-icon-question"></i>
+                      </span>
+                    </el-tooltip>
+                  </el-radio>
+                </el-radio-group>
+              </el-form-item>
+              <el-form-item>
+                <el-collapse>
+                  <el-collapse-item>
+                    <template slot="title">
+                      操作步骤
+                      <i class="header-icon el-icon-info"></i>
+                    </template>
+                    <div class="line">
+                      <b>步骤①、</b>拆掉分拣器下的传送带，让分拣器输入/输出端失效；
+                    </div>
+                    <div class="line">
+                      <b>步骤②、</b>给失效的分拣器设置过滤物品（假设物品为A）；
+                    </div>
+                    <div class="line">
+                      <b>步骤③、</b>给需要对接的传送带节点打上物品A的图标，并在图标下输入标记数（正数匹配输出端；负数匹配输入端）；
+                    </div>
+                    <div class="line">
+                      <b>步骤④、</b>将传送带节点和分拣器（连带着建筑）复制进蓝图工具，使用“无带流”一键输出；
+                    </div>
+                    <div class="line">
+                      <b>步骤⑤、</b>粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端。
+                    </div>
+                  </el-collapse-item>
+                  <el-collapse-item>
+                    <template slot="title">
+                      注意要点
+                      <i class="header-icon el-icon-info"></i>
+                    </template>
+                    <div class="line">
+                      <b>要点①、</b>传送带图标下的
+                      <b>标记数必须为正数或负数</b>，不匹配0。
+                    </div>
+                    <div class="line">
+                      <div>
+                        <b>要点②、</b>标记数的
+                        <b>正负</b>用于控制分拣器是从传送带上
+                        <b>放入还是取出</b>。
+                      </div>
+                      <div>（正数匹配分拣器失效的输出端；负数匹配分拣器失效的输入端）</div>
+                    </div>
+                    <div class="line">
+                      <div>
+                        <b>要点③、</b>标记数的
+                        <b>数值</b>用于控制可接入的
+                        <b>分拣器总速度上限</b>。
+                      </div>
+                      <div>（分拣器速度计算长度影响，长度1格时速度为：白30/蓝6/绿3/黄1.5，具体看游戏内分拣器属性，白爪以30计）</div>
+                      <div>【如：“-30”可匹配5个蓝爪的输入端——从带上取走，“9”可匹配1个蓝爪+1个绿爪的输出端——往带上放置】</div>
+                    </div>
+                    <div class="line">
+                      <b>要点④、</b>一个传送带节点匹配满上限，才会匹配下一个符合条件的节点。（匹配顺序按建筑顺序）
+                    </div>
+                    <div class="line">
+                      <b>要点⑤、</b>导入时传送带上已有的分拣器链接也会计入总速度。
+                    </div>
+                    <div class="line" style="color: red">
+                      <b>要点⑥、</b>*一个传送带节点最多可链接8个分拣器。（官方限制，输入端和输出端合计）
+                    </div>
+                    <div class="line" style="color: red">
+                      <b>要点⑦、</b>*蓝图每次复制后负数标记数会+1，因此粘贴进工具的蓝图会默认-1修正。（官方BUG）
+                    </div>
+                    <div class="line" style="color: red">
+                      <b>要点⑧、</b>*无带流在2023/01/05的官方更新后，直接粘贴无带蓝图将出现分拣器输入输出端失效
+                      <div>解决方法：粘贴蓝图后删除分拣器失效的输入/输出端对应的传送带，同位置再次粘贴蓝图，[Shift+Enter]强制建造，即可连接失效端</div>
+                    </div>
+                  </el-collapse-item>
+                </el-collapse>
+              </el-form-item>
+              <div style="text-align: center;line-height:50px">
+                <el-button type="warning" round @click="openUrl('https://www.bilibili.com/video/BV138411x7Sn')">操作视频教程</el-button>
+              </div>
+            </template>
+          </el-form>
+        </ScrollCardItem>
+        <ScrollCardItem name="输出结果">
+          <template #topRight v-if="formInline.resData.trim() || formInline.resJSON.trim()">
+            <el-button plain size="small" @click="saveFile" icon="el-icon-folder-opened">导出{{formInline.resType=='blueprint'?'蓝图':formInline.resType=='json'?'JSON':''}}文件</el-button>
+            <el-button type="primary" plain size="small" @click="outToClipboard" icon="el-icon-document-copy">复制</el-button>
+            <el-divider direction="vertical"></el-divider>
+            <el-button type="primary" size="small" @click="outToInput">将结果重新导入</el-button>
+          </template>
+          <div class="resConfigMsg" v-if="formInline.resConfigMsg">当前输出配置：{{formInline.resConfigMsg}}</div>
+          <el-form :model="formInline" @submit.native.prevent>
+            <el-form-item>
+              <el-radio-group v-model="formInline.resType">
+                <el-radio label="blueprint">输出蓝图</el-radio>
+                <el-radio label="json">输出JSON</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item v-if="formInline.resType=='blueprint'">
+              <el-input type="textarea" v-model="formInline.resData" :rows="5" readonly ref="resDataRef"></el-input>
+            </el-form-item>
+            <el-form-item v-if="formInline.resType=='json'">
+              <el-input type="textarea" v-model="formInline.resJSON" :rows="5" readonly ref="resJSONRef"></el-input>
+            </el-form-item>
+          </el-form>
+          <template v-if="formInline.resBlueprintData">
+            <el-divider></el-divider>
+            <div>包含设施</div>
+            <div class="itemList">
+              <el-tooltip class="itemWrap" effect="dark" placement="top" v-for="item,index in getItemList(formInline.resBlueprintData)" :key="index">
+                <template slot="content">
+                  <p>{{item.name}}</p>
+                </template>
+                <div class="item">
+                  <img class="icon" :src="getIcon(item)" />
+                  <div class="count">{{item.count}}</div>
+                </div>
+              </el-tooltip>
+            </div>
+          </template>
+        </ScrollCardItem>
+      </ScrollCard>
     </div>
     <el-dialog title="匹配结果" :visible.sync="NBM_dia">
       <template v-if="NBM_failMap.length==0">
@@ -611,14 +591,19 @@
 </template>
 
 <script>
+import ScrollCard from "@/components/ScrollCard.vue";
+import ScrollCardItem from "@/components/ScrollCardItem.vue";
 import * as PARSER from "@/utils/parser";
 import * as itemsUtil from "@/utils/itemsUtil";
 import { saveAs } from "file-saver";
 export default {
   name: "Home",
+  components: {
+    ScrollCard,
+    ScrollCardItem,
+  },
   data() {
     return {
-      activeStep: "0",
       formInline: {
         dataType: "blueprint",
         importData: "",
@@ -887,23 +872,6 @@ export default {
         label: "label",
       },
     };
-  },
-  computed: {
-    menuData() {
-      let menuData = [{ menuName: "生成配置" }, { menuName: "输出结果" }];
-      if (this.formInline.paramType != "无中生有") {
-        menuData.unshift({ menuName: "导入蓝图" });
-      }
-      return menuData;
-    },
-  },
-  mounted() {
-    this.$nextTick(() => {
-      window.addEventListener("scroll", this.onScroll);
-      document
-        .querySelector(".scrollContent .el-scrollbar__wrap")
-        .addEventListener("scroll", this.onScroll);
-    });
   },
   methods: {
     formatNum_sevenToNegative(num) {
@@ -2048,70 +2016,6 @@ export default {
       reader.readAsText(file.raw, "UTF-8");
       reader.onload = onLoadCallback;
     },
-    onScroll(e) {
-      let scrollItems = document.querySelectorAll(".el-card__header");
-      for (let i = scrollItems.length - 1; i >= 0; i--) {
-        if (!this.click) {
-          let judge = e.target.scrollTop >= scrollItems[i].offsetTop - scrollItems[0].offsetTop;
-          if (judge) {
-            this.activeStep = i.toString();
-            break;
-          }
-        }
-      }
-    },
-    jump(index) {
-      if (index == "数据字典") {
-        return window.open("https://github.com/cying314/edit-dspblue-print#蓝图数据字典");
-      } else if (index == "联系作者") {
-        // return window.open("https://space.bilibili.com/34117233");
-        return window.open("https://www.bilibili.com/video/BV1kr4y1V73y");
-      } else if (index == "查看更新") {
-        return window.open("https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666");
-      }
-
-      let _this = this;
-      this.click = true;
-      let target = document.querySelector(".scrollContent .el-scrollbar__wrap");
-      let scrollItems = document.querySelectorAll(".el-card__header");
-      if (target.scrollHeight <= target.scrollTop + target.clientHeight) {
-        this.activeStep = index;
-      }
-      let total = scrollItems[index].offsetTop - scrollItems[0].offsetTop;
-      let distance = target.scrollTop;
-      let step = total / 50;
-      if (total > distance) {
-        smoothDown(target);
-      } else {
-        let newTotal = distance - total;
-        step = newTotal / 50;
-        smoothUp(target);
-      }
-      function smoothDown(element) {
-        if (distance < total) {
-          distance += step;
-          element.scrollTop = distance;
-          setTimeout(smoothDown.bind(this, element), 10);
-        } else {
-          element.scrollTop = total;
-          setTimeout(() => {
-            _this.click = false;
-          }, 10);
-        }
-      }
-      function smoothUp(element) {
-        if (distance > total) {
-          distance -= step;
-          element.scrollTop = distance;
-          setTimeout(smoothUp.bind(this, element), 10);
-        } else {
-          element.scrollTop = total;
-          setTimeout(() => {
-            _this.click = false;
-          }, 10);
-        }
-      }
-    },
     openUrl(url) {
       window.open(url);
     },
@@ -2122,6 +2026,39 @@ export default {
 <style lang="scss" scoped>
 .main {
   background: #f0f2f5;
+  .navRight {
+    display: flex;
+    align-items: center;
+    margin-right: 5px;
+    .item {
+      font-size: 12px;
+      color: #999;
+      text-decoration: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      img {
+        width: 16px;
+        height: 16px;
+      }
+      span {
+        margin-left: 5px;
+      }
+      &.hover span {
+        display: inline-block;
+        overflow: hidden;
+        transition: width 0.2s ease-in-out;
+      }
+      &.hover:not(:hover) span {
+        width: 0 !important;
+      }
+    }
+    .item:hover {
+      color: #3a8ee6;
+      text-decoration: underline;
+    }
+  }
   .loading-mask {
     position: fixed;
     z-index: 2000;
@@ -2191,90 +2128,51 @@ export default {
     flex-direction: column;
     position: relative;
     z-index: 10;
-    .navScrollBar {
-      .el-menu {
+    .el-form {
+      // min-width: 330px;
+      ::v-deep .el-form-item__error {
+        position: unset;
+      }
+      ::v-deep .el-collapse-item__header {
+        font-size: 14px;
+        color: #606266;
+      }
+      ::v-deep .el-collapse-item__content {
+        font-size: 14px;
+        text-indent: 2em;
+        color: #606266;
+        .line {
+          margin-top: 10px;
+        }
+      }
+      .flex {
         display: flex;
-        user-select: none;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        .el-input {
+          min-width: 60px;
+        }
+        .el-icon-link {
+          width: 3%;
+          margin-left: 3%;
+          margin-right: -3%;
+          font-size: 20px;
+          color: #666;
+          text-align: center;
+          line-height: 40px;
+        }
+        .el-form-item {
+          flex: 1;
+        }
       }
     }
-    .scrollWrap {
-      height: 0;
-      flex: 1;
-      .scrollContent {
-        ::v-deep .el-scrollbar__wrap {
-          margin-bottom: 0 !important;
-          margin-right: 0 !important;
-          &::-webkit-scrollbar {
-            display: none;
-          }
-        }
-        ::v-deep .el-card__header {
-          line-height: 32px;
-          padding: 12px 20px;
-          // min-width: 330px;
-          .card_header {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            .title {
-              flex-shrink: 0;
-            }
-            .btnWrap {
-              margin-left: auto;
-              display: flex;
-              justify-content: flex-end;
-              flex-wrap: wrap;
-              align-items: center;
-            }
-          }
-        }
-        .el-form {
-          // min-width: 330px;
-          ::v-deep .el-form-item__error {
-            position: unset;
-          }
-          ::v-deep .el-collapse-item__header {
-            font-size: 14px;
-            color: #606266;
-          }
-          ::v-deep .el-collapse-item__content {
-            font-size: 14px;
-            text-indent: 2em;
-            color: #606266;
-            .line {
-              margin-top: 10px;
-            }
-          }
-          .flex {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            .el-input {
-              min-width: 60px;
-            }
-            .el-icon-link {
-              width: 3%;
-              margin-left: 3%;
-              margin-right: -3%;
-              font-size: 20px;
-              color: #666;
-              text-align: center;
-              line-height: 40px;
-            }
-            .el-form-item {
-              flex: 1;
-            }
-          }
-        }
-        .el-tree {
-          ::v-deep .el-tree-node {
-            white-space: pre-wrap;
-            word-break: break-all;
-          }
-          ::v-deep .el-tree-node__content {
-            height: auto;
-          }
-        }
+    .el-tree {
+      ::v-deep .el-tree-node {
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      ::v-deep .el-tree-node__content {
+        height: auto;
       }
     }
   }
