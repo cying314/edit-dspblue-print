@@ -31,6 +31,9 @@ export function isInserter(id) { return inserterBuildIds.has(id); }
  * @param length 分拣器长度(默认1)
  */
 export function getInserterSpeed(itemId, length) {
+    if (itemId === 2014) {
+        return 30; // 白爪不受长度影响
+    }
     let speed;
     switch (itemId) {
         case 2011:
@@ -41,9 +44,6 @@ export function getInserterSpeed(itemId, length) {
             break;
         case 2013:
             speed = 6;
-            break;
-        case 2014:
-            speed = 30;
             break;
     }
     // 计入分拣器长度影响的速度

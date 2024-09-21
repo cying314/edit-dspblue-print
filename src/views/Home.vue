@@ -4,7 +4,7 @@
       <ScrollCard
         :otherLinks="[
         {name:'数据字典', url: 'https://gitee.com/cying314/edit-dspblue-print#蓝图数据字典'},
-        {name:'查看更新(当前版本：v5.5)', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
+        {name:'查看更新(当前版本：v5.6)', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
       ]"
       >
         <template #navRight>
@@ -498,7 +498,11 @@
                         <b>数值</b>用于控制可接入的
                         <b>分拣器总速度上限</b>。
                       </div>
-                      <div>（分拣器速度计算长度影响，长度1格时速度为：白30/蓝6/绿3/黄1.5，具体看游戏内分拣器属性，白爪以30计）</div>
+                      <div>
+                        <span>（除白爪外的分拣器速度计算长度影响，</span>
+                        <span style="color:#E6A23C">长度1格时速度为：白30/蓝6/绿3/黄1.5</span>
+                        <span>，具体见游戏内分拣器属性）</span>
+                      </div>
                       <div>【如：“-30”可匹配5个蓝爪的输入端——从带上取走，“9”可匹配1个蓝爪+1个绿爪的输出端——往带上放置】</div>
                     </div>
                     <div class="line">
