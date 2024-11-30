@@ -94,28 +94,90 @@ function importBuilding(r) {
             z: fix(r.getFloat32()),
         };
     }
-    const num = r.getInt32(); // 兼容(V0.10.30.22239)[2024/05/29]后更新的倾斜字段，新版蓝图数据前缀多个-100
-    const b = {
-        index: num <= -100 ? r.getInt32() : num,
-        areaIndex: r.getInt8(),
-        localOffset: [readXYZ(), readXYZ()],
-        yaw: [fix(r.getFloat32()), fix(r.getFloat32())],
-        tilt: num <= -100 ? r.getFloat32() : 0,
-        itemId: r.getInt16(),
-        modelIndex: r.getInt16(),
-        outputObjIdx: r.getInt32(),
-        inputObjIdx: r.getInt32(),
-        outputToSlot: r.getInt8(),
-        inputFromSlot: r.getInt8(),
-        outputFromSlot: r.getInt8(),
-        inputToSlot: r.getInt8(),
-        outputOffset: r.getInt8(),
-        inputOffset: r.getInt8(),
-        recipeId: r.getInt16(),
-        filterId: r.getInt16(),
-        parameters: null,
-    };
+    const num = r.getInt32();
+    const b = { parameters: null };
+    if (num <= -101) {
+        // 兼容(V0.10.31.24646)[2024/12/01]更新，前缀改为-101
+        b.index = r.getInt32();
+        b.itemId = r.getInt16();
+        b.modelIndex = r.getInt16();
+        b.areaIndex = r.getInt8();
+        b.localOffset = [readXYZ()];
+        b.yaw = [fix(r.getFloat32())];
+        if (b.itemId > 2000 && b.itemId < 2010) {
+            // 传送带参数
+            b.tilt = r.getFloat32();
+            b.pitch = 0;
+            b.localOffset[1] = {...b.localOffset[0]};
+            b.yaw[1] = b.yaw[0];
+            b.tilt2 = b.tilt;
+            b.pitch2 = 0;
+        } else if (b.itemId > 2010 && b.itemId < 2020) {
+            // 分拣器参数
+            b.tilt = r.getFloat32();
+            b.pitch = r.getFloat32();
+            b.localOffset[1] = readXYZ();
+            b.yaw[1] = fix(r.getFloat32());
+            b.tilt2 = r.getFloat32();
+            b.pitch2 = r.getFloat32();
+        } else {
+            b.tilt = 0;
+            b.pitch = 0;
+            b.localOffset[1] = {...b.localOffset[0]};
+            b.yaw[1] = b.yaw[0];
+            b.tilt2 = 0;
+            b.pitch2 = 0;
+        }
+        b.outputObjIdx = r.getInt32();
+        b.inputObjIdx = r.getInt32();
+        b.outputToSlot = r.getInt8();
+        b.inputFromSlot = r.getInt8();
+        b.outputFromSlot = r.getInt8();
+        b.inputToSlot = r.getInt8();
+        b.outputOffset = r.getInt8();
+        b.inputOffset = r.getInt8();
+        b.recipeId = r.getInt16();
+        b.filterId = r.getInt16();
+    } else if (num <= -100) {
+        // 兼容(V0.10.30.22239)[2024/05/29]后更新的倾斜字段，新版蓝图数据前缀多个-100
+        b.index = r.getInt32();
+        b.areaIndex = r.getInt8();
+        b.localOffset = [readXYZ(), readXYZ()];
+        b.yaw = [fix(r.getFloat32()), fix(r.getFloat32())];
+        b.tilt = r.getFloat32();
+        b.itemId = r.getInt16();
+        b.modelIndex = r.getInt16();
+        b.outputObjIdx = r.getInt32();
+        b.inputObjIdx = r.getInt32();
+        b.outputToSlot = r.getInt8();
+        b.inputFromSlot = r.getInt8();
+        b.outputFromSlot = r.getInt8();
+        b.inputToSlot = r.getInt8();
+        b.outputOffset = r.getInt8();
+        b.inputOffset = r.getInt8();
+        b.recipeId = r.getInt16();
+        b.filterId = r.getInt16();
+    } else {
+        b.index = num;
+        b.areaIndex = r.getInt8();
+        b.localOffset = [readXYZ(), readXYZ()];
+        b.yaw = [fix(r.getFloat32()), fix(r.getFloat32())];
+        b.tilt = 0;
+        b.itemId = r.getInt16();
+        b.modelIndex = r.getInt16();
+        b.outputObjIdx = r.getInt32();
+        b.inputObjIdx = r.getInt32();
+        b.outputToSlot = r.getInt8();
+        b.inputFromSlot = r.getInt8();
+        b.outputFromSlot = r.getInt8();
+        b.inputToSlot = r.getInt8();
+        b.outputOffset = r.getInt8();
+        b.inputOffset = r.getInt8();
+        b.recipeId = r.getInt16();
+        b.filterId = r.getInt16();
+    }
     b.itemName = itemsMap.get(b.itemId)?.name || `未知物品_${b.itemId}`;
+    b.parameters = null;
     const length = r.getInt16();
     if (length > 0) {
         const v = r.getView(length * Int32Array.BYTES_PER_ELEMENT);
@@ -129,16 +191,26 @@ function exportBuilding(w, b) {
         w.setFloat32(v.y);
         w.setFloat32(v.z);
     }
-    w.setInt32(-100); // 兼容(V0.10.30.22239)[2024/05/29]后更新的倾斜字段，新版蓝图数据前缀多个-100
+    // w.setInt32(-100); // 兼容(V0.10.30.22239)[2024/05/29]后更新的倾斜字段，新版蓝图数据前缀多个-100
+    w.setInt32(-101); // 兼容(V0.10.31.24646)[2024/12/01]更新，前缀改为-101
     w.setInt32(b.index);
-    w.setInt8(b.areaIndex);
-    writeXYZ(b.localOffset[0]);
-    writeXYZ(b.localOffset[1]);
-    w.setFloat32(b.yaw[0]);
-    w.setFloat32(b.yaw[1]);
-    w.setFloat32(b.tilt);
     w.setInt16(b.itemId);
     w.setInt16(b.modelIndex);
+    w.setInt8(b.areaIndex);
+    writeXYZ(b.localOffset[0]);
+    w.setFloat32(b.yaw[0]);
+    if (b.itemId > 2000 && b.itemId < 2010) {
+        // 传送带参数
+        w.setFloat32(b.tilt);
+    } else if (b.itemId > 2010 && b.itemId < 2020) {
+        // 分拣器参数
+        w.setFloat32(b.tilt);
+        w.setFloat32(b.pitch);
+        writeXYZ(b.localOffset[1]);
+        w.setFloat32(b.yaw[1]);
+        w.setFloat32(b.tilt2);
+        w.setFloat32(b.pitch2);
+    }
     w.setInt32(b.outputObjIdx);
     w.setInt32(b.inputObjIdx);
     w.setInt8(b.outputToSlot);

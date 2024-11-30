@@ -4,7 +4,7 @@
       <ScrollCard
         :otherLinks="[
         {name:'数据字典', url: 'https://gitee.com/cying314/edit-dspblue-print#蓝图数据字典'},
-        {name:'查看更新(当前版本：v5.6)', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
+        {name:'查看更新(当前版本：v5.7)', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
       ]"
       >
         <template #navRight>
@@ -1306,6 +1306,9 @@ export default {
         ],
         yaw: [yaw, yaw],
         tilt: 0,
+        tilt2: 0,
+        pitch: 0,
+        pitch2: 0,
         itemId: itemId,
         modelIndex: 37,
         outputObjIdx: outputObjIdx,
@@ -1434,6 +1437,9 @@ export default {
         localOffset: [{ x: startPointX, y: startPointY, z: startPointZ }, offsetObj],
         yaw: yaw,
         tilt: 0,
+        tilt2: 0,
+        pitch: 0,
+        pitch2: 0,
         itemId: 2013,
         modelIndex: 43,
         outputObjIdx: 0,
@@ -1569,6 +1575,7 @@ export default {
           } else if (itemsUtil.isBelt(v.itemId)) {
             // 翻转传送带倾斜角度
             v.tilt = -v.tilt;
+            v.tilt2 = -v.tilt2;
             // 传送带 调换接到建筑上的插槽索引
             if (beltSlotBuildIndexs.has(v.inputObjIdx)) {
               // 输入端
@@ -1661,6 +1668,9 @@ export default {
           ],
           yaw: [0, 0],
           tilt: 0,
+          tilt2: 0,
+          pitch: 0,
+          pitch2: 0,
           itemId: 1131,
           modelIndex: 37,
           outputObjIdx: -1,
