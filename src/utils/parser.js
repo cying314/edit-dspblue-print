@@ -97,7 +97,7 @@ function importBuilding(r) {
     const num = r.getInt32();
     const b = { parameters: null };
     if (num <= -101) {
-        // 兼容(V0.10.31.24646)[2024/12/01]更新，前缀改为-101
+        // 兼容(V0.10.31.24646)[2024/11/30]更新，前缀改为-101
         b.index = r.getInt32();
         b.itemId = r.getInt16();
         b.modelIndex = r.getInt16();
@@ -192,7 +192,7 @@ function exportBuilding(w, b) {
         w.setFloat32(v.z);
     }
     // w.setInt32(-100); // 兼容(V0.10.30.22239)[2024/05/29]后更新的倾斜字段，新版蓝图数据前缀多个-100
-    w.setInt32(-101); // 兼容(V0.10.31.24646)[2024/12/01]更新，前缀改为-101
+    w.setInt32(-101); // 兼容(V0.10.31.24646)[2024/11/30]更新，前缀改为-101
     w.setInt32(b.index);
     w.setInt16(b.itemId);
     w.setInt16(b.modelIndex);

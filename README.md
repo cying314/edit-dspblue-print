@@ -81,6 +81,58 @@
 
 #### <span id="building对象">**BUILDING对象**</span>
 
+##### [2024/11/30后]：游戏版本V0.10.31.24646简化蓝图结构
+
+> 变化描述：
+
+1. 版本标识`num`改为-101
+2. 移动`itemId`、`modelIndex`顺序
+3. `localOffset[1]`、`yaw[1]`改为分拣器独有
+4. `tilt`改为分拣器和传送带独有
+5. 分拣器建筑增加`pitch`、`tilt2`、`pitch2`属性
+
+| 字段             | 字段类型                | 长度(字节)            | 备注                                                         |
+| ---------------- | ----------------------- | --------------------- | ------------------------------------------------------------ |
+| num              | Number                  | 4                     | 固定值-101，用以标识蓝图版本[V0.10.31.24646后蓝图版本标识]   |
+| index            | Number                  | 4                     | 数组索引                                                     |
+| itemId           | Number                  | 2                     | 建筑id                                                       |
+| itemName         | String                  | -                     | 建筑名称                                                     |
+| modelIndex       | Number                  | 2                     | 模型id                                                       |
+| areaIndex        | Number                  | 1                     | 对应areas索引，一般为0                                       |
+| localOffset[0].x | Number                  | 4                     | 建筑物相对坐标x                                              |
+| localOffset[0].y | Number                  | 4                     | 建筑物相对坐标y                                              |
+| localOffset[0].z | Number                  | 4                     | 建筑物相对坐标z                                              |
+| yaw[0]           | Number                  | 4                     | 建筑物旋转角度（单位：角度）                                 |
+| tilt             | Number                  | 4                     | 建筑物倾斜角度（单位：角度）<br />*传送带建筑`(2000<itemId<2010)`、分拣器建筑`(2010<itemId<2020)`独有 |
+| pitch            | Number                  | 4                     | 分拣器起始点朝向（单位：角度）[V0.10.31.24646版本新增]<br />*分拣器建筑`(2010<itemId<2020)`独有 |
+| localOffset[1].x | Number                  | 4                     | 分拣器目标点相对坐标x<br />*分拣器建筑`(2010<itemId<2020)`独有 |
+| localOffset[1].y | Number                  | 4                     | 分拣器目标点相对坐标y<br />*分拣器建筑`(2010<itemId<2020)`独有 |
+| localOffset[1].z | Number                  | 4                     | 分拣器目标点相对坐标z<br />*分拣器建筑`(2010<itemId<2020)`独有 |
+| yaw[1]           | Number                  | 4                     | 分拣器目标点旋转角度（单位：角度）<br />*分拣器建筑`(2010<itemId<2020)`独有 |
+| tilt2            | Number                  | 4                     | 分拣器目标点倾斜角度（单位：角度）[V0.10.31.24646版本新增]<br />*分拣器建筑`(2010<itemId<2020)`独有 |
+| pitch2           | Number                  | 4                     | 分拣器目标点朝向（单位：角度）[V0.10.31.24646版本新增]<br />*分拣器建筑`(2010<itemId<2020)`独有 |
+| outputObjIdx     | Number                  | 4                     | 输出端目标建筑索引                                           |
+| inputObjIdx      | Number                  | 4                     | 输入端目标建筑索引                                           |
+| outputToSlot     | Number                  | 1                     | 输出端绑定到目标建筑的插槽索引                               |
+| inputFromSlot    | Number                  | 1                     | 输入端绑定到目标建筑的插槽索引                               |
+| outputFromSlot   | Number                  | 1                     | (建筑物自身属性)                                             |
+| inputToSlot      | Number                  | 1                     | (建筑物自身属性)                                             |
+| outputOffset     | Number                  | 1                     | 输出端插槽偏移，常见于分拣器                                 |
+| inputOffset      | Number                  | 1                     | 输入端插槽偏移，常见于分拣器                                 |
+| recipeId         | Number                  | 2                     | 配方id，常见于制造厂类建筑                                   |
+| filterId         | Number                  | 2                     | 过滤物品id，常见于分拣器、四向                               |
+| parameterLength  | -                       | 2                     | parameters长度（每单位：4字节）                              |
+| parameters       | **[PARAM](#param对象)** | *parameterLength* * 4 | 建筑配置参数                                                 |
+
+
+
+##### [2024/05/29后]：游戏版本V0.10.30.22239新增倾斜字段
+
+> 变化描述：
+
+1. 增加版本标识`num`，固定值-100
+2. 建筑增加`tilt`属性
+
 | 字段               | 字段类型                | 长度(字节)            | 备注                                                 |
 | ------------------ | ----------------------- | --------------------- | ---------------------------------------------------- |
 | num                | Number                  | 4                     | 固定值-100，用以标识蓝图版本[V0.10.30.22239版本新增] |
@@ -109,6 +161,37 @@
 | filterId           | Number                  | 2                     | 过滤物品id，常见于分拣器、四向                       |
 | parameterLength    | -                       | 2                     | parameters长度（每单位：4字节）                      |
 | parameters         | **[PARAM](#param对象)** | *parameterLength* * 4 | 建筑配置参数                                         |
+
+
+
+##### [2024/05/29前]：早期蓝图版本
+
+| 字段               | 字段类型                | 长度(字节)            | 备注                            |
+| ------------------ | ----------------------- | --------------------- | ------------------------------- |
+| index              | Number                  | 4                     | 数组索引                        |
+| areaIndex          | Number                  | 1                     | 对应areas索引，一般为0          |
+| localOffset        | Array(2)                |                       | 建筑物相对坐标                  |
+| -	*_array_item* | Object                  |                       |                                 |
+| -	-	x        | Number                  | 4                     |                                 |
+| -	-	y        | Number                  | 4                     |                                 |
+| -	-	z        | Number                  | 4                     |                                 |
+| yaw                | Array(2)                |                       | 建筑物旋转角度（单位：角度）    |
+| -	*_array_item* | Number                  | 4                     |                                 |
+| itemId             | Number                  | 2                     | 建筑id                          |
+| itemName           | String                  | -                     | 建筑名称                        |
+| modelIndex         | Number                  | 2                     | 模型id                          |
+| outputObjIdx       | Number                  | 4                     | 输出端目标建筑索引              |
+| inputObjIdx        | Number                  | 4                     | 输入端目标建筑索引              |
+| outputToSlot       | Number                  | 1                     | 输出端绑定到目标建筑的插槽索引  |
+| inputFromSlot      | Number                  | 1                     | 输入端绑定到目标建筑的插槽索引  |
+| outputFromSlot     | Number                  | 1                     | (建筑物自身属性)                |
+| inputToSlot        | Number                  | 1                     | (建筑物自身属性)                |
+| outputOffset       | Number                  | 1                     | 输出端插槽偏移，常见于分拣器    |
+| inputOffset        | Number                  | 1                     | 输入端插槽偏移，常见于分拣器    |
+| recipeId           | Number                  | 2                     | 配方id，常见于制造厂类建筑      |
+| filterId           | Number                  | 2                     | 过滤物品id，常见于分拣器、四向  |
+| parameterLength    | -                       | 2                     | parameters长度（每单位：4字节） |
+| parameters         | **[PARAM](#param对象)** | *parameterLength* * 4 | 建筑配置参数                    |
 
 
 
