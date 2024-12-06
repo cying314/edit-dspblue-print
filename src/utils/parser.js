@@ -291,7 +291,7 @@ function encodedSize(bp) {
         + 1 // numAreas
         + 14 * bp.areas.length
         + 4 // numBuildings
-        + 69 * bp.buildings.length;
+        + 81 * bp.buildings.length;
     for (const b of bp.buildings) {
         if (b.parameters === null)
             continue;

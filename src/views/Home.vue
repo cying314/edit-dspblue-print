@@ -4,7 +4,7 @@
       <ScrollCard
         :otherLinks="[
         {name:'数据字典', url: 'https://gitee.com/cying314/edit-dspblue-print#蓝图数据字典'},
-        {name:'查看更新(当前版本：v5.7)', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
+        {name:'查看更新(当前版本：v5.8)', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
       ]"
       >
         <template #navRight>
@@ -1877,9 +1877,13 @@ export default {
           this.formInline.resBlueprintData = res;
           this.formInline.resConfigMsg = msg;
           console.log(this.formInline.resBlueprintData);
-          this.success("输出成功！");
-          this.$set(this.formInline, "resData", PARSER.toStr(this.formInline.resBlueprintData));
-          this.$set(this.formInline, "resJSON", JSON.stringify(this.formInline.resBlueprintData));
+          try {
+            this.$set(this.formInline, "resData", PARSER.toStr(this.formInline.resBlueprintData));
+            this.$set(this.formInline, "resJSON", JSON.stringify(this.formInline.resBlueprintData));
+            this.success("输出成功！");
+          } catch (e) {
+            this.error("输出失败：" + e);
+          }
         }
       });
     },
@@ -1915,11 +1919,17 @@ export default {
     render() {
       this.$refs.importForm.validate((valid) => {
         if (valid) {
+          let inputData = this.formInline.inputData.trim();
+          // 自动判断文本是蓝图还是json
+          if (inputData.startsWith("BLUEPRINT:")) {
+            this.$set(this.formInline, "dataType", "blueprint");
+          } else if (inputData.startsWith("{")) {
+            this.$set(this.formInline, "dataType", "json");
+          }
           if (!this.formInline.dataType) {
             this.warning("请选择导入类型");
             return;
           }
-          let inputData = this.formInline.inputData.trim();
           let blueprintData;
           if (this.formInline.dataType == "blueprint") {
             try {
