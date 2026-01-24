@@ -21,6 +21,23 @@ class BufferReader extends BufferIO {
     getInt16() { const v = this.view.getInt16(this.pos, true); this.pos += 2; return v; }
     getInt32() { const v = this.view.getInt32(this.pos, true); this.pos += 4; return v; }
     getFloat32() { const v = this.view.getFloat32(this.pos, true); this.pos += 4; return v; }
+    getString() {
+        // 读取字符串字节长度(.NET 7-bit encoded int)
+        let len = 0;
+        let shift = 0;
+        for (; ;) {
+            const b = this.getUint8();
+            len |= (b & 0x7F) << shift;
+            if ((b & 0x80) === 0) break;
+            shift += 7;
+            if (shift > 35) throw new Error('Bad 7-bit encoded int');
+        }
+        if (len === 0) return '';
+        // 读取字符串内容二进制流，解码为UTF-8
+        const v = this.getView(len);
+        const bytes = new Uint8Array(v.buffer, v.byteOffset, len);
+        return new TextDecoder('utf-8').decode(bytes);
+    }
 }
 class BufferWriter extends BufferIO {
     setUint8(value) { this.view.setUint8(this.pos, value); this.pos += 1; }
@@ -28,6 +45,23 @@ class BufferWriter extends BufferIO {
     setInt16(value) { this.view.setInt16(this.pos, value, true); this.pos += 2; }
     setInt32(value) { this.view.setInt32(this.pos, value, true); this.pos += 4; }
     setFloat32(value) { this.view.setFloat32(this.pos, value, true); this.pos += 4; }
+    setBytes(bytes) {
+        new Uint8Array(this.view.buffer, this.view.byteOffset + this.pos, bytes.length).set(bytes);
+        this.pos += bytes.length;
+    }
+    setString(value) {
+        const bytes = new TextEncoder().encode(value);
+        // 写入字符串字节数前缀 (.NET 7-bit encoded int)
+        let len = bytes.length;
+        let v = len >>> 0;
+        while (v >= 0x80) {
+            this.setUint8((v & 0x7F) | 0x80);
+            v >>>= 7;
+        }
+        this.setUint8(v & 0x7F);
+        // 写入字符串内容
+        this.setBytes(bytes);
+    }
 }
 function btoUint8Array(b) {
     const arr = new Uint8Array(b.length);
@@ -96,8 +130,8 @@ function importBuilding(r) {
     }
     const num = r.getInt32();
     const b = { parameters: null };
-    if (num <= -101) {
-        // 兼容(V0.10.31.24646)[2024/11/30]更新，前缀改为-101
+    if (num <= -102) {
+        // 兼容(V0.10.34.28281)[2026/01/22]更新，前缀改为-102
         b.index = r.getInt32();
         b.itemId = r.getInt16();
         b.modelIndex = r.getInt16();
@@ -108,7 +142,7 @@ function importBuilding(r) {
             // 传送带参数
             b.tilt = r.getFloat32();
             b.pitch = 0;
-            b.localOffset[1] = {...b.localOffset[0]};
+            b.localOffset[1] = { ...b.localOffset[0] };
             b.yaw[1] = b.yaw[0];
             b.tilt2 = b.tilt;
             b.pitch2 = 0;
@@ -123,7 +157,7 @@ function importBuilding(r) {
         } else {
             b.tilt = 0;
             b.pitch = 0;
-            b.localOffset[1] = {...b.localOffset[0]};
+            b.localOffset[1] = { ...b.localOffset[0] };
             b.yaw[1] = b.yaw[0];
             b.tilt2 = 0;
             b.pitch2 = 0;
@@ -138,6 +172,51 @@ function importBuilding(r) {
         b.inputOffset = r.getInt8();
         b.recipeId = r.getInt16();
         b.filterId = r.getInt16();
+        b.parameters = readParameters(r, b.itemId);
+        b.content = readContent(r);
+    } else if (num <= -101) {
+        // 兼容(V0.10.31.24646)[2024/11/30]更新，前缀改为-101
+        b.index = r.getInt32();
+        b.itemId = r.getInt16();
+        b.modelIndex = r.getInt16();
+        b.areaIndex = r.getInt8();
+        b.localOffset = [readXYZ()];
+        b.yaw = [fix(r.getFloat32())];
+        if (b.itemId > 2000 && b.itemId < 2010) {
+            // 传送带参数
+            b.tilt = r.getFloat32();
+            b.pitch = 0;
+            b.localOffset[1] = { ...b.localOffset[0] };
+            b.yaw[1] = b.yaw[0];
+            b.tilt2 = b.tilt;
+            b.pitch2 = 0;
+        } else if (b.itemId > 2010 && b.itemId < 2020) {
+            // 分拣器参数
+            b.tilt = r.getFloat32();
+            b.pitch = r.getFloat32();
+            b.localOffset[1] = readXYZ();
+            b.yaw[1] = fix(r.getFloat32());
+            b.tilt2 = r.getFloat32();
+            b.pitch2 = r.getFloat32();
+        } else {
+            b.tilt = 0;
+            b.pitch = 0;
+            b.localOffset[1] = { ...b.localOffset[0] };
+            b.yaw[1] = b.yaw[0];
+            b.tilt2 = 0;
+            b.pitch2 = 0;
+        }
+        b.outputObjIdx = r.getInt32();
+        b.inputObjIdx = r.getInt32();
+        b.outputToSlot = r.getInt8();
+        b.inputFromSlot = r.getInt8();
+        b.outputFromSlot = r.getInt8();
+        b.inputToSlot = r.getInt8();
+        b.outputOffset = r.getInt8();
+        b.inputOffset = r.getInt8();
+        b.recipeId = r.getInt16();
+        b.filterId = r.getInt16();
+        b.parameters = readParameters(r, b.itemId);
     } else if (num <= -100) {
         // 兼容(V0.10.30.22239)[2024/05/29]后更新的倾斜字段，新版蓝图数据前缀多个-100
         b.index = r.getInt32();
@@ -157,6 +236,7 @@ function importBuilding(r) {
         b.inputOffset = r.getInt8();
         b.recipeId = r.getInt16();
         b.filterId = r.getInt16();
+        b.parameters = readParameters(r, b.itemId);
     } else {
         b.index = num;
         b.areaIndex = r.getInt8();
@@ -175,15 +255,25 @@ function importBuilding(r) {
         b.inputOffset = r.getInt8();
         b.recipeId = r.getInt16();
         b.filterId = r.getInt16();
+        b.parameters = readParameters(r, b.itemId);
     }
     b.itemName = itemsMap.get(b.itemId)?.name || `未知物品_${b.itemId}`;
-    b.parameters = null;
+    return b;
+}
+function readParameters(r, itemId) {
     const length = r.getInt16();
     if (length > 0) {
         const v = r.getView(length * Int32Array.BYTES_PER_ELEMENT);
-        b.parameters = getParamParser(b.itemId).decode(v);
+        return getParamParser(itemId).decode(v);
     }
-    return b;
+    return null;
+}
+function readContent(r) {
+    const length = r.getInt32();
+    if (length > 0) {
+        return r.getString();
+    }
+    return null;
 }
 function exportBuilding(w, b) {
     function writeXYZ(v) {
@@ -192,7 +282,8 @@ function exportBuilding(w, b) {
         w.setFloat32(v.z);
     }
     // w.setInt32(-100); // 兼容(V0.10.30.22239)[2024/05/29]后更新的倾斜字段，新版蓝图数据前缀多个-100
-    w.setInt32(-101); // 兼容(V0.10.31.24646)[2024/11/30]更新，前缀改为-101
+    // w.setInt32(-101); // 兼容(V0.10.31.24646)[2024/11/30]更新，前缀改为-101
+    w.setInt32(-102); // 兼容(V0.10.34.28281)[2026/01/22]更新，前缀改为-102
     w.setInt32(b.index);
     w.setInt16(b.itemId);
     w.setInt16(b.modelIndex);
@@ -221,7 +312,7 @@ function exportBuilding(w, b) {
     w.setInt8(b.inputOffset);
     w.setInt16(b.recipeId);
     w.setInt16(b.filterId);
-    if (b.parameters !== null) {
+    if (b.parameters != null) {
         const parser = getParamParser(b.itemId);
         const length = parser.getLength(b.parameters);
         w.setInt16(length);
@@ -229,6 +320,12 @@ function exportBuilding(w, b) {
     }
     else {
         w.setInt16(0);
+    }
+    if (b.content?.length > 0) {
+        w.setInt32(b.content.length);
+        w.setString(b.content);
+    } else {
+        w.setInt32(0);
     }
 }
 const START = 'BLUEPRINT:';
@@ -240,13 +337,17 @@ export function fromStr(strData) {
     const cells = strData.substring(START.length, p1).split(',');
     if (cells.length < 12)
         throw Error('Header too short');
+    const flag0 = cells[0]; // (V0.10.34.28281)[2026/01/22]更新后为1，新增 作者/版本/额外的新建属性 字段
     const header = {
         layout: parseInt(cells[1]),
         icons: cells.slice(2, 7).map(s => parseInt(s)),
         time: new Date(TIME_BASE + parseInt(cells[8]) / 10000),
-        gameVersion: cells[9],
-        shortDesc: decodeURIComponent(cells[10]),
-        desc: decodeURIComponent(cells[11]),
+        gameVersion: cells[9], // 游戏版本号
+        shortDesc: decodeURIComponent(cells[10]), // 缩略图文字
+        author: flag0 >= 1 ? decodeURIComponent(cells[11]) : "", // 作者
+        customVersion: flag0 >= 1 ? decodeURIComponent(cells[12]) : "", // 版本
+        externalFields: flag0 >= 1 ? decodeURIComponent(cells[13]) : "", // 额外的新建属性
+        desc: flag0 >= 1 ? decodeURIComponent(cells[14]) : decodeURIComponent(cells[11]), // 蓝图介绍
     };
     const p2 = strData.length - 33;
     if (strData[p2] !== '"')
@@ -291,18 +392,34 @@ function encodedSize(bp) {
         + 1 // numAreas
         + 14 * bp.areas.length
         + 4 // numBuildings
-        + 81 * bp.buildings.length;
+        + 85 * bp.buildings.length;
     for (const b of bp.buildings) {
-        if (b.parameters === null)
-            continue;
-        const parser = getParamParser(b.itemId);
-        result += parser.getLength(b.parameters) * Int32Array.BYTES_PER_ELEMENT;
+        // parameters length
+        if (b.parameters != null) {
+            const parser = getParamParser(b.itemId);
+            result += parser.getLength(b.parameters) * Int32Array.BYTES_PER_ELEMENT;
+        }
+
+        // content length
+        if (b.content?.length > 0) {
+            const byteLen = new TextEncoder().encode(b.content).length;
+            // 计算可变字符串的 7-bit encoded int 编码前缀长度
+            let prefixLen = 0;
+            let v = byteLen;
+            do {
+                prefixLen++;
+                v >>>= 7;
+            } while (v > 0);
+            result += prefixLen;
+            // 字符串实际字节数
+            result += byteLen;
+        }
     }
     return result;
 }
 export function toStr(bp) {
     let result = START;
-    result += '0,';
+    result += '1,';
     result += bp.header.layout;
     result += ',';
     for (const i of bp.header.icons) {
@@ -312,11 +429,17 @@ export function toStr(bp) {
     result += '0,';
     result += (new Date(bp.header.time).getTime() - TIME_BASE) * 10000;
     result += ',';
-    result += bp.header.gameVersion;
+    result += bp.header.gameVersion; // 游戏版本号
     result += ',';
-    result += encodeURIComponent(bp.header.shortDesc);
+    result += encodeURIComponent(bp.header.shortDesc); // 缩略图文字
     result += ',';
-    result += encodeURIComponent(bp.header.desc);
+    result += encodeURIComponent(bp.header.author); // 作者
+    result += ',';
+    result += encodeURIComponent(bp.header.customVersion); // 版本
+    result += ',';
+    result += encodeURIComponent(bp.header.externalFields); // 额外的新建属性
+    result += ',';
+    result += encodeURIComponent(bp.header.desc); // 蓝图介绍
     result += '"';
     const decoded = new Uint8Array(encodedSize(bp));
     const writer = new BufferWriter(new DataView(decoded.buffer));
