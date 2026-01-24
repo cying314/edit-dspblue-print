@@ -61,6 +61,7 @@ export const items = [
   { id: 3008, models: [402], name: "行星护盾发生器", icon: "turret-shield" },
   { id: 3009, models: [453], name: "战场分析基站", icon: "battle-base" },
   { id: 3010, models: [482], name: "近程电浆塔", icon: "turret-plasma-ground" },
+  { id: 2401, models: [664], name: "全息信标", icon: "holo-beacon" },
   { id: 1001, name: "铁矿" },
   { id: 1002, name: "铜矿" },
   { id: 1003, name: "硅石" },

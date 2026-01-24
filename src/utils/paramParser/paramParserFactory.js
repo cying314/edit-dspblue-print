@@ -1,7 +1,8 @@
-import DefaultParamParser from "./defaultParamParser";
+import DefaultParamParser, { getParam } from "./defaultParamParser";
+import MarkerParamParser from "./markerParamParser";
 import BoolParamOpt from "./paramOptions/boolParamOpt";
 import FunParamOpt from "./paramOptions/funParamOpt";
-import ParamOpt, { getParam } from "./paramOptions/paramOpt";
+import ParamOpt from "./paramOptions/paramOpt";
 import ParamParser from "./paramParser";
 import * as itemUtil from "../itemsUtil";
 
@@ -37,6 +38,7 @@ export function getParamParser(itemId) {
             [2312, verticalLaunchingSiloParamParser], // 垂直发射井
             [2030, MonitorParamParser], // 流速监测器
             [2107, dispenserParamParser], // 物流配送器
+            [2401, markerParamParser], // 信标
         ]);
         const parser = parameterParsers.get(itemId);
         if (parser !== undefined) return parser;
@@ -204,9 +206,10 @@ export const tankParamParser = new ParamParser(2, {
 });
 
 // 电磁轨道弹射器 ParamParser
-export const ejectorParamParser = new ParamParser(2, {
+export const ejectorParamParser = new ParamParser(3, {
     orbitId: ParamOpt.of(0), // 送入轨道编号 -> 0:无 1-20:轨道列表编号
     tenfoldSpeed: BoolParamOpt.of(1, 1, 0), // 是否开启十倍射速 Boolean_1_0
+    autoOrbit: BoolParamOpt.of(1, 1, 0),  // 是否开启自动轨道 Boolean_1_0
 });
 
 // 射线接收站 ParamParser
@@ -282,6 +285,9 @@ export const turretParamParser = new ParamParser(128, {
     }), // 攻击设置优先级
     phasePos: FunParamOpt.of(3, (pVal) => pVal * 60, (oVal) => oVal / 60), // 干扰塔相位偏移(单位：秒) -> 0-5
 });
+
+// 信标 ParamParser
+export const markerParamParser = new MarkerParamParser();
 
 // 默认 ParamParser
 export const unknownParamParser = new DefaultParamParser();

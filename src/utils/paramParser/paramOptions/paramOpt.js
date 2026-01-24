@@ -1,3 +1,5 @@
+import { setParam, getParam } from "../defaultParamParser";
+
 /**
  * 建筑参数配置
  */
@@ -29,12 +31,4 @@ export default class ParamOpt {
         let pos = typeof this.pos === 'function' ? this.pos(v) : this.pos; // 若pos为函数则动态获取
         return getParam(v, pos);
     }
-}
-
-export function setParam(v, pos, value) {
-    v.setInt32(pos * Int32Array.BYTES_PER_ELEMENT, value, true);
-}
-
-export function getParam(v, pos) {
-    return v.getInt32(pos * Int32Array.BYTES_PER_ELEMENT, true);
 }

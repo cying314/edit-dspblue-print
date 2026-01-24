@@ -1,4 +1,3 @@
-import { setParam, getParam } from "./paramOptions/paramOpt";
 /**
  * 默认建筑参数解析器
  */
@@ -38,4 +37,12 @@ export default class DefaultParamParser {
         }
         return p;
     }
+}
+
+export function setParam(v, pos, value) {
+    v.setInt32(pos * Int32Array.BYTES_PER_ELEMENT, value, true);
+}
+
+export function getParam(v, pos) {
+    return v.getInt32(pos * Int32Array.BYTES_PER_ELEMENT, true);
 }
