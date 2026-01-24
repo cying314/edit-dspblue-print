@@ -209,7 +209,7 @@ export const tankParamParser = new ParamParser(2, {
 export const ejectorParamParser = new ParamParser(3, {
     orbitId: ParamOpt.of(0), // 送入轨道编号 -> 0:无 1-20:轨道列表编号
     tenfoldSpeed: BoolParamOpt.of(1, 1, 0), // 是否开启十倍射速 Boolean_1_0
-    autoOrbit: BoolParamOpt.of(1, 1, 0),  // 是否开启自动轨道 Boolean_1_0
+    autoOrbit: BoolParamOpt.of(2, 1, 0),  // 是否开启自动轨道 Boolean_1_0
 });
 
 // 射线接收站 ParamParser

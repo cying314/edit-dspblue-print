@@ -30,35 +30,55 @@
 
 ### <span id="蓝图数据字典">蓝图数据字典</span>
 
-> **数据主体**
+> **蓝图解析数据结构：**
+>
+> 1. 字符串分割头信息：截取从 `BLUEPRINT:` 后到首个 `"` 间的字符串，为[蓝图HEADER](#蓝图HEADER)
+>
+> 2. 字节流信息：首个 `"` 到第二个 `"` 间的字符串解析为字节流，**从[META信息](#META信息)开始，表格列示字段按字节流顺序读取**
 
-| 字段                    | 字段类型                      | 索引/长度                   | 备注                                                         |
-| ----------------------- | ----------------------------- | --------------------------- | ------------------------------------------------------------ |
-|                         |                               | *cells* **数组索引**        | 截取从 `BLUEPRINT:` 后到首个 `"` 间的字符串<br />逗号分割为数组*cells* |
-| header                  | Object                        |                             | 蓝图文件头部信息                                             |
-| -	layout             | Number                        | *cells[1]*                  | 蓝图图标布局                                                 |
-| -	icons              | Array(5)                      |                             | 蓝图图标                                                     |
-| -	-	*_array_item* | Number                        | *cells[2 - 6]*              |                                                              |
-| -	time               | Date                          | *cells[8]*                  | 创建时间                                                     |
-| -	gameVersion        | String                        | *cells[9]*                  | 游戏版本号                                                   |
-| -	shortDesc          | String                        | *cells[10]*                 | 缩略图文字                                                   |
-| -	desc               | String                        | *cells[11]*                 | 蓝图介绍                                                     |
-|                         |                               | **长度(字节)**              | 首个 `"` 到第二个 `"` 间的字符串解析为字节流<br />**以下按蓝图数据按字节流从左到右排列** |
-| version                 | Number                        | 4                           | 一般为1                                                      |
-| cursorOffset            | Object                        |                             | 预览蓝图时的鼠标锚点偏移                                     |
-| -	x                  | Number                        | 4                           |                                                              |
-| -	y                  | Number                        | 4                           |                                                              |
-| cursorTargetArea        | Number                        | 4                           | 对应areas索引，一般为0                                       |
-| dragBoxSize             | Object                        |                             | 长按鼠标拖拽复制建筑时，间隔的长宽<br />一般与*areas.size*相同 |
-| -	x                  | Number                        | 4                           |                                                              |
-| -	y                  | Number                        | 4                           |                                                              |
-| primaryAreaIdx          | Number                        | 4                           | 对应areas索引，一般为0                                       |
-| numAreas                | -                             | 1                           | areas数组长度（仅读取），一般为1                             |
-| areas                   | Array(*numAreas*)             |                             |                                                              |
-| -	*_array_item*      | **[AREA](#area对象)**         | 14                          |                                                              |
-| numBuildings            | -                             | 4                           | buildings数组长度（仅读取）                                  |
-| buildings               | Array(*numBuildings*)         |                             | 建筑信息                                                     |
-| -	*_array_item*      | **[BUILDING](#building对象)** | 61 + *_parameterLength* * 4 |                                                              |
+#### <span id="蓝图HEADER">**蓝图HEADER**</span>
+
+- 截取从 `BLUEPRINT:` 后到首个 `"` 间的字符串，逗号分割为数组*cells*
+
+| 字段                    | 字段类型 | cells索引                         | 备注                                                         |
+| ----------------------- | -------- | --------------------------------- | ------------------------------------------------------------ |
+| header                  | Object   |                                   | 蓝图文件头部信息                                             |
+| -	flag0              | -        | cells[0]                          | 1：存在 作者/自定义蓝图版本/新建属性 字段[V0.10.34.28281版本新增]<br />0：默认 |
+| -	layout             | Number   | *cells[1]*                        | 蓝图图标布局                                                 |
+| -	icons              | Array(5) |                                   | 蓝图图标                                                     |
+| -	-	*_array_item* | Number   | *cells[2 - 6]*                    |                                                              |
+| -	time               | Date     | *cells[8]*                        | 创建时间                                                     |
+| -	gameVersion        | String   | *cells[9]*                        | 游戏版本号                                                   |
+| -	shortDesc          | String   | *cells[10]*                       | 缩略图文字                                                   |
+| -	author             | String   | *cells[11]*                       | 作者[V0.10.34.28281版本新增]                                 |
+| -	customVersion      | String   | *cells[12]*                       | 自定义蓝图版本[V0.10.34.28281版本新增]                       |
+| -	externalFields     | String   | *cells[13]*                       | 自定义新建属性，例：`key1:val1;key2:val2;`<br />[V0.10.34.28281版本新增] |
+| -	desc               | String   | *flag0>=1 ? cells[14]: cells[11]* | 蓝图介绍                                                     |
+
+
+
+#### <span id="META信息">**META信息**</span>
+
+| 字段               | 字段类型                        | 长度(字节)                                  | 备注                                                         |
+| ------------------ | ------------------------------- | ------------------------------------------- | ------------------------------------------------------------ |
+| version            | Number                          | 4                                           | 2：新增`reformData`地基数据[V0.10.33.26934版本新增]<br />1：默认 |
+| cursorOffset       | Object                          |                                             | 预览蓝图时的鼠标锚点偏移                                     |
+| -	x             | Number                          | 4                                           |                                                              |
+| -	y             | Number                          | 4                                           |                                                              |
+| cursorTargetArea   | Number                          | 4                                           | 对应areas索引，一般为0                                       |
+| dragBoxSize        | Object                          |                                             | 长按鼠标拖拽复制建筑时，间隔的长宽<br />一般与*areas.size*相同 |
+| -	x             | Number                          | 4                                           |                                                              |
+| -	y             | Number                          | 4                                           |                                                              |
+| primaryAreaIdx     | Number                          | 4                                           | 对应areas索引，一般为0                                       |
+| numAreas           | -                               | 1                                           | areas数组长度（仅读取），一般为1                             |
+| areas              | Array(*numAreas*)               |                                             |                                                              |
+| -	*_array_item* | **[AREA](#area对象)**           | 14                                          |                                                              |
+| numBuildings       | -                               | 4                                           | buildings数组长度（仅读取）                                  |
+| buildings          | Array(*numBuildings*)           |                                             | 建筑信息                                                     |
+| -	*_array_item* | **[BUILDING](#building对象)**   | *85 + _parameterLength \* 4*                |                                                              |
+| patch              | Number                          | 4                                           | 预留字段[V0.10.33.26934版本新增]                             |
+| reformDataFlag     | -                               | 1                                           | 标记是否存在地基数据[V0.10.33.26934版本新增]                 |
+| reformData         | **[REFORM_DATA](#REFORM_DATA)** | *13 + _rectLen \* 8 + _customColorLen \* 4* | 地基信息[V0.10.33.26934版本新增]                             |
 
 
 
@@ -81,6 +101,13 @@
 
 #### <span id="building对象">**BUILDING对象**</span>
 
+##### [2026/01/22后]：游戏版本V0.10.34.28281新增信标文本内容
+
+> 变化描述：
+
+1. 版本标识`num`改为-102
+2. 增加`content`信标文本内容，以`7-bit encoded int`编码
+
 ##### [2024/11/30后]：游戏版本V0.10.31.24646简化蓝图结构
 
 > 变化描述：
@@ -93,7 +120,7 @@
 
 | 字段             | 字段类型                | 长度(字节)            | 备注                                                         |
 | ---------------- | ----------------------- | --------------------- | ------------------------------------------------------------ |
-| num              | Number                  | 4                     | 固定值-101，用以标识蓝图版本[V0.10.31.24646后蓝图版本标识]   |
+| num              | Number                  | 4                     | -102：对应游戏版本>=V0.10.34.28281的蓝图<br />-101：对应游戏版本>=V0.10.31.24646的蓝图 |
 | index            | Number                  | 4                     | 数组索引                                                     |
 | itemId           | Number                  | 2                     | 建筑id                                                       |
 | itemName         | String                  | -                     | 建筑名称                                                     |
@@ -123,6 +150,8 @@
 | filterId         | Number                  | 2                     | 过滤物品id，常见于分拣器、四向                               |
 | parameterLength  | -                       | 2                     | parameters长度（每单位：4字节）                              |
 | parameters       | **[PARAM](#param对象)** | *parameterLength* * 4 | 建筑配置参数                                                 |
+| contentLength    | -                       | 4                     | content字符串长度[V0.10.34.28281版本新增]                    |
+| content          | String                  | (可变长度)            | 信标文本内容（以.NET 7-bit encoded int格式编码）[V0.10.34.28281版本新增] |
 
 
 
@@ -386,9 +415,10 @@
 
 | 字段              | 字段类型 | 偏移量(Int32) | 长度(Int32) | 备注                                        |
 | ----------------- | -------- | ------------- | ----------- | ------------------------------------------- |
-| _parameters       | Object   |               | 2           |                                             |
+| _parameters       | Object   |               | 3           |                                             |
 | -	orbitId      | Number   | 0             | 1           | 送入轨道编号<br />-> 0:无 1-20:轨道列表编号 |
 | -	tenfoldSpeed | Boolean  | 1             | 1           | 是否开启十倍射速                            |
+| -    autoOrbit    | Boolean  | 2             | 1           | 是否开启自动轨道                            |
 
 
 
@@ -443,14 +473,50 @@
 
 
 
+##### 信标配置参数
+
+> [^2401]: 全息信标
+
+| 字段                      | 字段类型 | 偏移量(Int32) | 长度(Int32) | 备注                                                         |
+| ------------------------- | -------- | ------------- | ----------- | ------------------------------------------------------------ |
+| _parameters               | Object   |               | 2048        |                                                              |
+| -	color                | Number   | 0             | 1           | 颜色索引                                                     |
+| -	height               | Number   | 1             | 1           | 投影高度                                                     |
+| -	radius               | Number   | 2             | 1           | 投影半径                                                     |
+| -	visibility           | Number   | 3             | 1           | 标记等级<br />-> 0:离线 1:视野范围内 2:本地星球 3:本地星系 4:全星区 |
+| -	detailLevel          | Number   | 4             | 1           | 信息等级<br />-> 0:不常显信息 1:常显图标 2:常显标题 3:常显待办事项 |
+| -	icon                 | Number   | 5             | 1           | 图标ID                                                       |
+| -	_defaultParamsBase64 | String   | 0             | 2048        |                                                              |
+
+
+
 ##### 默认配置参数解析（未知建筑参数）
 
-| 字段                | 字段类型                      | 偏移量(Int32) | 长度(Int32)       | 备注 |
-| ------------------- | ----------------------------- | ------------- | ----------------- | ---- |
-| _parameters         | Object                        |               | *parameterLength* |      |
-| -	_defaultParams | Int32Array(*parameterLength*) | 0             | *parameterLength* |      |
+| 字段                      | 字段类型 | 偏移量(Int32) | 长度(Int32)       | 备注 |
+| ------------------------- | -------- | ------------- | ----------------- | ---- |
+| _parameters               | Object   |               | *parameterLength* |      |
+| -	_defaultParamsBase64 | String   | 0             | parameterLength   |      |
 
 
+
+#### REFORM_DATA对象
+
+| 字段                     | 字段类型      | 长度(字节)                                      | 备注                                    |
+| ------------------------ | ------------- | ----------------------------------------------- | --------------------------------------- |
+| num0                     | -             | 1                                               | 预留字段                                |
+| rectLen                  | Number        | 4                                               | 地基区域数组长度                        |
+| rects                    | Object        |                                                 | 地基区域数组                            |
+| -	num0                | -             | 1                                               | 预留字段                                |
+| -	x                   | Number        | 2                                               | 区域x坐标                               |
+| -	y                   | Number        | 2                                               | 区域y坐标                               |
+| -	w                   | Number        | 1                                               | 区域宽度                                |
+| -	h                   | Number        | 1                                               | 区域长度                                |
+| -	type                | Number        | 1                                               | 地基装饰类型<br />-> 2:带装饰, 7:无装饰 |
+| -	color               | Number        | (与type同一字节)<br />高3位为type，低5位为color | 颜色索引，无装饰为0                     |
+| -	areaIndex           | Number        | 1                                               | 对应区域索引                            |
+| customReformColorMask    | Number        | 4                                               | 自定义地基颜色Mask                      |
+| customReformColorsLength | Number        | 4                                               | 自定义地基颜色数组长度                  |
+| customReformColors       | Array(Number) | *customReformColorsLength \* 4*                 | 自定义地基颜色数组                      |
 
 
 

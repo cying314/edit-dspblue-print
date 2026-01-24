@@ -4,7 +4,7 @@
       <ScrollCard
         :otherLinks="[
         {name:'数据字典', url: 'https://gitee.com/cying314/edit-dspblue-print#蓝图数据字典'},
-        {name:'查看更新(当前版本：v5.8)', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
+        {name:'查看更新(当前版本：v6.0)', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
       ]"
       >
         <template #navRight>
