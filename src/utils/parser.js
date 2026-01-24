@@ -20,6 +20,7 @@ class BufferReader extends BufferIO {
     getInt8() { const v = this.view.getInt8(this.pos); this.pos += 1; return v; }
     getInt16() { const v = this.view.getInt16(this.pos, true); this.pos += 2; return v; }
     getInt32() { const v = this.view.getInt32(this.pos, true); this.pos += 4; return v; }
+    getUint32() { const v = this.view.getUint32(this.pos, true); this.pos += 4; return v; }
     getFloat32() { const v = this.view.getFloat32(this.pos, true); this.pos += 4; return v; }
     getString() {
         // 读取字符串字节长度(.NET 7-bit encoded int)
@@ -44,6 +45,7 @@ class BufferWriter extends BufferIO {
     setInt8(value) { this.view.setInt8(this.pos, value); this.pos += 1; }
     setInt16(value) { this.view.setInt16(this.pos, value, true); this.pos += 2; }
     setInt32(value) { this.view.setInt32(this.pos, value, true); this.pos += 4; }
+    setUint32(value) { this.view.setUint32(this.pos, value, true); this.pos += 4; }
     setFloat32(value) { this.view.setFloat32(this.pos, value, true); this.pos += 4; }
     setBytes(bytes) {
         new Uint8Array(this.view.buffer, this.view.byteOffset + this.pos, bytes.length).set(bytes);
@@ -328,6 +330,68 @@ function exportBuilding(w, b) {
         w.setInt32(0);
     }
 }
+
+function importFormatData(r) {
+    r.getUint8(); // 预留字段
+    const rectLen = r.getInt32();
+    if (rectLen < 0 || rectLen > 2930400)
+        throw new Error("Invalid Reform Count");
+    const rects = [];
+    for (let i = 0; i < rectLen; ++i) {
+        rects[i] = importReformRect(r);
+    }
+    const customReformColorMask = r.getUint32();
+    const customReformColors = [];
+    const colorLen = r.getInt32();
+    for (let i = 0; i < colorLen && i < 2930400; ++i) {
+        customReformColors[i] = r.getUint32();
+    }
+    return {
+        rects,
+        customReformColorMask,
+        customReformColors,
+    };
+}
+function importReformRect(r) {
+    r.getUint8(); // 预留字段
+    const rect = {};
+    rect.x = r.getInt16();
+    rect.y = r.getInt16();
+    rect.w = r.getUint8();
+    rect.h = r.getUint8();
+    const data = r.getUint8();
+    rect.areaIndex = r.getUint8();
+    // data: 高3位为地基装饰类型，低5位为颜色索引
+    rect.type = data >> 5; // 地基装饰类型：2:带装饰, 7:无装饰
+    rect.color = data & 0x1F; // 颜色索引：无装饰为0
+    return rect;
+}
+function exportFormatData(w, reformData) {
+    w.setUint8(0); // 预留字段
+    const rectLen = reformData.rects?.length || 0;
+    w.setInt32(rectLen);
+    for (let i = 0; i < rectLen; ++i) {
+        exportReformRect(w, reformData.rects[i]);
+    }
+    w.setUint32(reformData.customReformColorMask);
+    const colorLen = reformData.customReformColors?.length || 0;
+    w.setInt32(colorLen);
+    for (let i = 0; i < colorLen; ++i) {
+        w.setUint32(reformData.customReformColors[i]);
+    }
+}
+function exportReformRect(w, rect) {
+    w.setUint8(0); // 预留字段
+    w.setInt16(rect.x);
+    w.setInt16(rect.y);
+    w.setUint8(rect.w);
+    w.setUint8(rect.h);
+    // data: 高3位为地基装饰类型，低5位为颜色索引
+    const data = rect.type << 5 | rect.color;
+    w.setUint8(data);
+    w.setUint8(rect.areaIndex);
+}
+
 const START = 'BLUEPRINT:';
 const TIME_BASE = new Date(0).setUTCFullYear(1);
 export function fromStr(strData) {
@@ -360,7 +424,7 @@ export function fromStr(strData) {
     const decoded = pako.ungzip(btoUint8Array(atob(encoded)));
     const reader = new BufferReader(new DataView(decoded.buffer));
     const meta = {
-        version: reader.getInt32(),
+        version: reader.getInt32(), // (V0.10.33.26934)[2025/09/29]更新后为2，新增 地基数据 字段
         cursorOffset: {
             x: reader.getInt32(),
             y: reader.getInt32(),
@@ -372,14 +436,28 @@ export function fromStr(strData) {
         },
         primaryAreaIdx: reader.getInt32(),
     };
+
+    // 区域数据
     const numAreas = reader.getUint8();
     const areas = [];
     for (let i = 0; i < numAreas; i++)
         areas.push(importArea(reader));
+
+    // 建筑数据
     const numBuildings = reader.getInt32();
     const buildings = [];
     for (let i = 0; i < numBuildings; i++)
         buildings.push(importBuilding(reader));
+
+    if (meta.version >= 2) {
+        meta.patch = reader.getInt32(); // 预留字段
+
+        // 地基数据
+        const numReformData = reader.getUint8();
+        if (numReformData != 0) {
+            meta.reformData = importFormatData(reader);
+        }
+    }
     return {
         header,
         ...meta,
@@ -413,6 +491,18 @@ function encodedSize(bp) {
             result += prefixLen;
             // 字符串实际字节数
             result += byteLen;
+        }
+    }
+    if (bp.version >= 2) {
+        result += 4; // 预留字段
+        result += 1; // 标记是否存在地基数据
+        if (bp.reformData != null && bp.reformData.rects?.length > 0) {
+            result += 1; // 预留字段
+            result += 4; // rects length
+            result += bp.reformData.rects.length * 8;
+            result += 4; // customReformColorMask
+            result += 4; // customReformColors length
+            result += (bp.reformData.customReformColors?.length || 0) * 4;
         }
     }
     return result;
@@ -456,6 +546,17 @@ export function toStr(bp) {
     writer.setInt32(bp.buildings.length);
     for (const b of bp.buildings)
         exportBuilding(writer, b);
+    // (V0.10.33.26934)[2025/09/29]更新后：预留字段交换编码位置、新增reformData字段
+    if (bp.version >= 2) {
+        writer.setInt32(bp.patch); // 预留字段
+        if (bp.reformData != null && bp.reformData.rects?.length > 0) {
+            writer.setUint8(1);
+            exportFormatData(writer, bp.reformData);
+        } else {
+            writer.setUint8(0);
+        }
+    }
+    writer.setInt32(bp.version);
     result += btoa(Uint8ArrayTob(pako.gzip(decoded)));
     const d = hex(digest(btoUint8Array(result).buffer));
     result += '"';
