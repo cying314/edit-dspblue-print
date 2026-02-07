@@ -362,7 +362,7 @@ function importReformRect(r) {
     const data = r.getUint8();
     rect.areaIndex = r.getUint8();
     // data: 高3位为地基装饰类型，低5位为颜色索引
-    rect.type = data >> 5; // 地基装饰类型：2:带装饰, 7:无装饰
+    rect.type = data >> 5; // 地基装饰类型：0:无地基, 1:装饰1-默认矩形井盖, 2:装饰2-网格, 3:装饰3-矩形轨道, 4:装饰4-小方格, 5:装饰5-暂同装饰2, 6:装饰6-黑边网格, 7:无装饰
     rect.color = data & 0x1F; // 颜色索引：无装饰为0
     return rect;
 }

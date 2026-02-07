@@ -120,6 +120,11 @@
                   <el-checkbox v-model="formInline.params.clearBelt">清空传送带图标</el-checkbox>
                   <el-checkbox v-model="formInline.params.clearInserter">清空分拣器过滤</el-checkbox>
                   <el-checkbox v-model="formInline.params.stationUnlockAmount">关闭沙盒模式物流塔槽位锁</el-checkbox>
+                  <br />
+                  <el-checkbox v-model="formInline.params.changeReformRectType">修改地基装饰</el-checkbox>
+                  <el-select size="small" style="margin-left:10px;width:100px" v-if="formInline.params.changeReformRectType" v-model="formInline.params.reformRectType">
+                    <el-option v-for="k in Object.keys(reformRectTypeEnum)" :key="k" :value="k" :label="reformRectTypeEnum[k]"></el-option>
+                  </el-select>
                 </el-form-item>
               </div>
             </template>
@@ -607,7 +612,7 @@ export default {
   data() {
     return {
       navExtraLinks: [
-        {name:'数据字典', url: 'https://gitee.com/cying314/edit-dspblue-print#蓝图数据字典'},
+        { name: "数据字典", url: "https://gitee.com/cying314/edit-dspblue-print#蓝图数据字典" },
         // {name:'查看更新(当前版本：' + process.env.VUE_APP_VERSION + ')', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
       ],
       formInline: {
@@ -649,6 +654,8 @@ export default {
           clearInserter: false,
           stationUnlockAmount: false,
           addBase: false,
+          changeReformRectType: false,
+          reformRectType: "1",
         },
         resBlueprintData: null,
         resConfigMsg: null,
@@ -877,6 +884,14 @@ export default {
         children: "children",
         label: "label",
       },
+      reformRectTypeEnum: {
+        1: "默认地基",
+        2: "网格",
+        3: "轨道",
+        4: "小方格",
+        6: "黑边网格",
+        7: "无装饰",
+      },
     };
   },
   methods: {
@@ -1068,6 +1083,14 @@ export default {
               v.filterId = 0;
             }
           }
+        });
+      }
+      return blueprintData;
+    },
+    handleChangeReformRectType(blueprintData, reformRectType) {
+      if (blueprintData.reformData?.rects?.length > 0) {
+        blueprintData.reformData.rects.forEach((rect) => {
+          rect.type = reformRectType || "1";
         });
       }
       return blueprintData;
@@ -1782,6 +1805,10 @@ export default {
               if (params.stationUnlockAmount) {
                 msg += " | 关闭沙盒模式物流塔槽位锁";
                 res = this.handleStationUnlockAmount(res);
+              }
+              if (params.changeReformRectType) {
+                msg += " | 修改地基装饰:" + this.reformRectTypeEnum[params.reformRectType];
+                res = this.handleChangeReformRectType(res, params.reformRectType);
               }
               break;
             case "垂直叠加":

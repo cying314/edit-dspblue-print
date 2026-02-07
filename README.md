@@ -501,22 +501,22 @@
 
 #### REFORM_DATA对象
 
-| 字段                     | 字段类型      | 长度(字节)                                      | 备注                                    |
-| ------------------------ | ------------- | ----------------------------------------------- | --------------------------------------- |
-| num0                     | -             | 1                                               | 预留字段                                |
-| rectLen                  | Number        | 4                                               | 地基区域数组长度                        |
-| rects                    | Object        |                                                 | 地基区域数组                            |
-| -	num0                | -             | 1                                               | 预留字段                                |
-| -	x                   | Number        | 2                                               | 区域x坐标                               |
-| -	y                   | Number        | 2                                               | 区域y坐标                               |
-| -	w                   | Number        | 1                                               | 区域宽度                                |
-| -	h                   | Number        | 1                                               | 区域长度                                |
-| -	type                | Number        | 1                                               | 地基装饰类型<br />-> 2:带装饰, 7:无装饰 |
-| -	color               | Number        | (与type同一字节)<br />高3位为type，低5位为color | 颜色索引，无装饰为0                     |
-| -	areaIndex           | Number        | 1                                               | 对应区域索引                            |
-| customReformColorMask    | Number        | 4                                               | 自定义地基颜色Mask                      |
-| customReformColorsLength | Number        | 4                                               | 自定义地基颜色数组长度                  |
-| customReformColors       | Array(Number) | *customReformColorsLength \* 4*                 | 自定义地基颜色数组                      |
+| 字段                     | 字段类型      | 长度(字节)                                      | 备注                                                         |
+| ------------------------ | ------------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| num0                     | -             | 1                                               | 预留字段                                                     |
+| rectLen                  | Number        | 4                                               | 地基区域数组长度                                             |
+| rects                    | Object        |                                                 | 地基区域数组                                                 |
+| -	num0                | -             | 1                                               | 预留字段                                                     |
+| -	x                   | Number        | 2                                               | 区域x坐标                                                    |
+| -	y                   | Number        | 2                                               | 区域y坐标                                                    |
+| -	w                   | Number        | 1                                               | 区域宽度                                                     |
+| -	h                   | Number        | 1                                               | 区域长度                                                     |
+| -	type                | Number        | 1                                               | 地基装饰类型<br />-> 0:无地基, 1:装饰1-默认矩形井盖, 2:装饰2-网格, 3:装饰3-矩形轨道, 4:装饰4-小方格, 5:装饰5-暂同装饰2, 6:装饰6-黑边网格, 7:无装饰 |
+| -	color               | Number        | (与type同一字节)<br />高3位为type，低5位为color | 颜色索引，无装饰为0                                          |
+| -	areaIndex           | Number        | 1                                               | 对应区域索引                                                 |
+| customReformColorMask    | Number        | 4                                               | 自定义地基颜色Mask                                           |
+| customReformColorsLength | Number        | 4                                               | 自定义地基颜色数组长度                                       |
+| customReformColors       | Array(Number) | *customReformColorsLength \* 4*                 | 自定义地基颜色数组                                           |
 
 
 
