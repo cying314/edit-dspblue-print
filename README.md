@@ -384,6 +384,7 @@
 | -	-	*_array_item_1* | Number   | 18            | 1           | 开始衰减距离(单位：米)<br />-> 默认为 (*衰减为0距离* / 3)（0-133） |
 | -	-	*_array_item_2* | Number   | 19            | 1           | 衰减为0距离(单位：米)<br />-> 1-400                          |
 | -	spawnItemOperator    | Number   | 20            | 1           | 生成/消耗货物模式<br />-> 0:不勾选 1:生成货物 2:消耗货物     |
+| -	digitalSignalId      | Number   | 21            | 1           | 信号传输IP                                                   |
 
 
 
@@ -486,6 +487,7 @@
 | -	visibility           | Number   | 3             | 1           | 标记等级<br />-> 0:离线 1:视野范围内 2:本地星球 3:本地星系 4:全星区 |
 | -	detailLevel          | Number   | 4             | 1           | 信息等级<br />-> 0:不常显信息 1:常显图标 2:常显标题 3:常显待办事项 |
 | -	icon                 | Number   | 5             | 1           | 图标ID                                                       |
+| -	digitalSignalId      | Number   | 6             | 1           | 信号传输IP                                                   |
 | -	_defaultParamsBase64 | String   | 0             | 2048        |                                                              |
 
 

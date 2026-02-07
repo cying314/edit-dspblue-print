@@ -23,6 +23,7 @@ export default class MarkerParamParser extends DefaultParamParser {
         setParam(v, 3, p.visibility);
         setParam(v, 4, p.detailLevel);
         setParam(v, 5, p.icon);
+        setParam(v, 6, p.digitalSignalId);
     }
     /**
      * @param {DataView} v 
@@ -40,6 +41,7 @@ export default class MarkerParamParser extends DefaultParamParser {
         p.visibility = _defaultParams[3]; // 标记等级 -> 0:离线 1:视野范围内 2:本地星球 3:本地星系 4:全星区
         p.detailLevel = _defaultParams[4]; // 信息等级 -> 0:不常显信息 1:常显图标 2:常显标题 3:常显待办事项
         p.icon = _defaultParams[5]; // 图标ID
+        p.digitalSignalId = _defaultParams[6]; // 信号传输IP
         return p;
     }
 }

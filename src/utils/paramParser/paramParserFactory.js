@@ -239,6 +239,7 @@ export const MonitorParamParser = new ParamParser(128, {
     failColorId: ParamOpt.of(6), // 不满足条件颜色索引 -> 0-255
     cargoFilter: ParamOpt.of(14), // 货物过滤物品id -> 0:不过滤 物品id->过滤
     spawnItemOperator: ParamOpt.of(20), // 生成/消耗货物模式 -> 0:不勾选 1:生成货物 2:消耗货物
+    digitalSignalId: ParamOpt.of(21), // 信号传输IP
 
     systemWarningMode: ParamOpt.of(10), // 系统警报模式 -> 0:无 1:未满足条件 2:满足条件 3:有货物响 4:无货物响 5:未满足且有货物 6:未满足且无货物
     systemWarningIconId: ParamOpt.of(17), // 系统警报图标id
