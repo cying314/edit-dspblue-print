@@ -1,14 +1,10 @@
 <template>
   <div class="main">
     <div class="wrap">
-      <ScrollCard
-        :otherLinks="[
-        {name:'数据字典', url: 'https://gitee.com/cying314/edit-dspblue-print#蓝图数据字典'},
-        {name:'查看更新(当前版本：v6.0)', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
-      ]"
-      >
+      <ScrollCard :otherLinks="navExtraLinks">
         <template #navRight>
           <div class="navRight">
+            <VersionDropdown />
             <a class="item hover" href="https://github.com/cying314/edit-dspblue-print" target="_blank">
               <img :src="require('@/assets/images/github.png')" />
               <span style="width:40px">Github</span>
@@ -597,6 +593,7 @@
 <script>
 import ScrollCard from "@/components/ScrollCard.vue";
 import ScrollCardItem from "@/components/ScrollCardItem.vue";
+import VersionDropdown from "@/components/VersionDropdown.vue";
 import * as PARSER from "@/utils/parser";
 import * as itemsUtil from "@/utils/itemsUtil";
 import { saveAs } from "file-saver";
@@ -605,9 +602,14 @@ export default {
   components: {
     ScrollCard,
     ScrollCardItem,
+    VersionDropdown,
   },
   data() {
     return {
+      navExtraLinks: [
+        {name:'数据字典', url: 'https://gitee.com/cying314/edit-dspblue-print#蓝图数据字典'},
+        // {name:'查看更新(当前版本：' + process.env.VUE_APP_VERSION + ')', url: 'https://pan.baidu.com/s/1kE3t7FUhvCSBbPczvVupvw?pwd=6666'},
+      ],
       formInline: {
         dataType: "blueprint",
         importData: "",
