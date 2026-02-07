@@ -499,7 +499,7 @@ function encodedSize(bp) {
         if (bp.reformData != null && bp.reformData.rects?.length > 0) {
             result += 1; // 预留字段
             result += 4; // rects length
-            result += bp.reformData.rects.length * 8;
+            result += bp.reformData.rects.length * 9;
             result += 4; // customReformColorMask
             result += 4; // customReformColors length
             result += (bp.reformData.customReformColors?.length || 0) * 4;
@@ -556,7 +556,6 @@ export function toStr(bp) {
             writer.setUint8(0);
         }
     }
-    writer.setInt32(bp.version);
     result += btoa(Uint8ArrayTob(pako.gzip(decoded)));
     const d = hex(digest(btoUint8Array(result).buffer));
     result += '"';

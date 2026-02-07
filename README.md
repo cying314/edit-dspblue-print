@@ -78,7 +78,7 @@
 | -	*_array_item* | **[BUILDING](#building对象)**   | *85 + _parameterLength \* 4*                |                                                              |
 | patch              | Number                          | 4                                           | 预留字段[V0.10.33.26934版本新增]                             |
 | reformDataFlag     | -                               | 1                                           | 标记是否存在地基数据[V0.10.33.26934版本新增]                 |
-| reformData         | **[REFORM_DATA](#REFORM_DATA)** | *13 + _rectLen \* 8 + _customColorLen \* 4* | 地基信息[V0.10.33.26934版本新增]                             |
+| reformData         | **[REFORM_DATA](#REFORM_DATA)** | *13 + _rectLen \* 9 + _customColorLen \* 4* | 地基信息[V0.10.33.26934版本新增]                             |
 
 
 
