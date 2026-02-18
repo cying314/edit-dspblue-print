@@ -23,6 +23,7 @@ export default class MarkerParamParser extends DefaultParamParser {
         setParam(v, 3, p.visibility);
         setParam(v, 4, p.detailLevel);
         setParam(v, 5, p.icon);
+        setParam(v, 6, p.ipAddress ?? 0);
     }
     /**
      * @param {DataView} v 
